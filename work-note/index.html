@@ -1,0 +1,1285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Work Note Builder</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📋</text></svg>">
+<style>
+  :root {
+    --bg: #f2f5f8;
+    --card: #ffffff;
+    --ink: #1c2733;
+    --muted: #5b6b7b;
+    --line: #d8e0e8;
+    --accent: #1565c0;
+    --accent-soft: #e3edf9;
+    --danger: #b3261e;
+    --ok: #1b7f4d;
+    --warn: #9a6700;
+    --radius: 10px;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font: 15px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  header.top {
+    background: var(--card);
+    border-bottom: 1px solid var(--line);
+    padding: 14px 20px;
+    display: flex; flex-wrap: wrap; gap: 12px; align-items: baseline;
+  }
+  header.top h1 { font-size: 20px; margin: 0; }
+  header.top .tag { color: var(--muted); font-size: 13px; }
+  header.top .spacer { flex: 1; }
+  header.top .id-fields { display: flex; gap: 8px; flex-wrap: wrap; }
+  header.top .id-fields input { width: 200px; }
+
+  .wrap {
+    display: grid;
+    grid-template-columns: minmax(360px, 560px) minmax(360px, 1fr);
+    gap: 18px;
+    padding: 18px 20px 60px;
+    max-width: 1400px;
+    margin: 0 auto;
+    align-items: start;
+  }
+  @media (max-width: 880px) { .wrap { grid-template-columns: 1fr; } }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+  .card h2 {
+    font-size: 13px; letter-spacing: .06em; text-transform: uppercase;
+    color: var(--muted); margin: 0 0 12px;
+  }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+  .row:last-child { margin-bottom: 0; }
+  .field { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 150px; }
+  .field.grow { flex: 2; }
+  .field > label { font-size: 12.5px; font-weight: 600; color: var(--muted); }
+  .field .hint { font-size: 12px; color: var(--muted); font-weight: 400; }
+
+  input[type=text], input[type=date], input[type=number], select, textarea {
+    font: inherit; color: inherit;
+    border: 1px solid var(--line); border-radius: 7px;
+    padding: 7px 9px; background: #fff; width: 100%;
+  }
+  input:focus, select:focus, textarea:focus {
+    outline: 2px solid var(--accent-soft); border-color: var(--accent);
+  }
+  textarea { resize: vertical; min-height: 64px; }
+
+  .ta-wrap { position: relative; }
+  .ta-wrap textarea, .ta-wrap input[type=text] { padding-right: 40px; }
+  button.mic {
+    position: absolute; right: 6px; top: 6px;
+    width: 28px; height: 28px; border-radius: 50%;
+    border: 1px solid var(--line); background: #fff; cursor: pointer;
+    font-size: 14px; line-height: 1; padding: 0;
+  }
+  button.mic.listening {
+    background: #ffe5e2; border-color: var(--danger);
+    animation: pulse 1.2s infinite;
+  }
+  @keyframes pulse { 50% { box-shadow: 0 0 0 5px rgba(179,38,30,.18); } }
+
+  button {
+    font: inherit; cursor: pointer;
+    border: 1px solid var(--line); border-radius: 7px;
+    background: #fff; padding: 7px 12px; color: var(--ink);
+  }
+  button:hover { border-color: var(--accent); }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+  button.primary:hover { background: #0f57a3; }
+  button.subtle { color: var(--muted); border-color: transparent; background: transparent; padding: 4px 8px; }
+  button.subtle:hover { color: var(--danger); border-color: transparent; }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  button.chip {
+    border-radius: 999px; padding: 4px 11px; font-size: 13px;
+    background: var(--accent-soft); border-color: transparent; color: var(--accent);
+  }
+  button.chip:hover { background: #d2e3f7; }
+  .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 999px; overflow: hidden; }
+  .seg button { border: none; border-radius: 0; padding: 4px 12px; font-size: 13px; background: #fff; }
+  .seg button.on { background: var(--accent); color: #fff; }
+
+  .picked { display: flex; flex-wrap: wrap; gap: 6px; min-height: 30px; padding: 5px 0; }
+  .picked .tag {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--ink); color: #fff; border-radius: 999px;
+    padding: 3px 6px 3px 12px; font-size: 13px;
+  }
+  .picked .tag button { background: transparent; border: none; color: #fff; padding: 0 4px; font-size: 13px; }
+  .picked .none { color: var(--muted); font-size: 13px; padding: 4px 0; }
+
+  .radio-row { display: flex; flex-wrap: wrap; gap: 4px 16px; }
+  .radio-row label, label.check { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; cursor: pointer; }
+  .check-list { display: flex; flex-direction: column; gap: 5px; }
+  .check-list input[type=number] { width: 62px; padding: 2px 6px; }
+
+  .dyn-row { display: flex; gap: 6px; align-items: center; margin-bottom: 6px; }
+  .dyn-row input[type=text] { flex: 1; }
+  .dyn-row select { width: auto; }
+  .dyn-row input[type=number] { width: 64px; }
+  .dyn-row .x { color: var(--muted); border-color: transparent; padding: 4px 7px; }
+  .dyn-row .x:hover { color: var(--danger); }
+
+  #clientPanel { border-top: 1px dashed var(--line); margin-top: 12px; padding-top: 12px; }
+  #clientList { list-style: none; margin: 10px 0 0; padding: 0; max-height: 210px; overflow-y: auto; border: 1px solid var(--line); border-radius: 7px; }
+  #clientList li { display: flex; justify-content: space-between; align-items: center; padding: 5px 10px; border-bottom: 1px solid var(--line); font-size: 14px; }
+  #clientList li:last-child { border-bottom: none; }
+  #clientList .none { color: var(--muted); }
+
+  .out-col { position: sticky; top: 14px; }
+  @media (max-width: 880px) { .out-col { position: static; } }
+  .tabs { display: flex; gap: 6px; margin-bottom: 10px; }
+  .tabs button { border-radius: 999px; padding: 6px 16px; font-weight: 600; color: var(--muted); }
+  .tabs button.on { background: var(--ink); border-color: var(--ink); color: #fff; }
+  .out-actions { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+  pre.out {
+    background: #fff; border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 18px 20px; margin: 0;
+    font: 13.5px/1.55 ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    white-space: pre-wrap; word-wrap: break-word;
+    min-height: 320px; max-height: calc(100vh - 150px); overflow-y: auto;
+  }
+  .copied-note { color: var(--ok); font-size: 13px; align-self: center; opacity: 0; transition: opacity .2s; }
+  .copied-note.show { opacity: 1; }
+  .hidden { display: none !important; }
+  .soft-note { font-size: 12.5px; color: var(--muted); margin-top: 6px; }
+  footer.foot { text-align: center; color: var(--muted); font-size: 12.5px; padding: 0 20px 30px; }
+
+  @media print {
+    body * { visibility: hidden; }
+    body.printing .print-target, body.printing .print-target * { visibility: visible; }
+    body.printing .print-target {
+      position: absolute; left: 0; top: 0; width: 100%;
+      border: none; max-height: none; overflow: visible;
+      font: 13pt/1.5 Georgia, "Times New Roman", serif; padding: 0.5in;
+    }
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <h1>📋 Work Note Builder</h1>
+  <span class="tag">occupational injury visits — everything stays on this device</span>
+  <span class="spacer"></span>
+  <div class="id-fields">
+    <input type="text" id="clinicName" placeholder="Clinic name (optional)" title="Shown at the top of the work status report">
+    <input type="text" id="providerName" placeholder="Provider name & credentials (optional)" title="Shown on the work status report">
+  </div>
+</header>
+
+<div class="wrap" id="app">
+  <div class="form-col">
+
+    <!-- ============ VISIT ============ -->
+    <section class="card">
+      <h2>Visit</h2>
+      <div class="row">
+        <div class="field">
+          <label for="visitType">Visit type</label>
+          <select id="visitType">
+            <option value="initial">Initial visit</option>
+            <option value="recheck">Follow-up / recheck</option>
+          </select>
+        </div>
+        <div class="field grow">
+          <label for="clientSelect">Client (employer)</label>
+          <select id="clientSelect"><option value="">— select client —</option></select>
+        </div>
+      </div>
+      <div class="row">
+        <div class="field grow">
+          <label for="employeeName">Employee name</label>
+          <input type="text" id="employeeName" placeholder="First Last" autocomplete="off">
+        </div>
+        <div class="field" style="max-width:150px">
+          <label for="pronouns">Pronouns</label>
+          <select id="pronouns">
+            <option value="they">they / them</option>
+            <option value="he">he / him</option>
+            <option value="she">she / her</option>
+          </select>
+        </div>
+      </div>
+      <div class="row">
+        <div class="field">
+          <label for="visitDate">Date of visit</label>
+          <input type="date" id="visitDate">
+        </div>
+        <div class="field">
+          <label for="injuryDate">Date of injury</label>
+          <input type="date" id="injuryDate">
+        </div>
+        <div class="field recheck-only">
+          <label for="lastVisitDate">Date of last visit</label>
+          <input type="date" id="lastVisitDate">
+        </div>
+      </div>
+      <button type="button" id="toggleClients" class="subtle">⚙ Manage client list…</button>
+      <div id="clientPanel" class="hidden">
+        <div class="row">
+          <div class="field grow">
+            <label>Upload a client list (.csv or .txt — one client per line; first column is used)</label>
+            <input type="file" id="clientFile" accept=".csv,.txt,.tsv,text/plain,text/csv">
+          </div>
+        </div>
+        <div class="row">
+          <div class="field grow">
+            <label for="clientPaste">…or paste names here (one per line), then Import</label>
+            <textarea id="clientPaste" rows="3" placeholder="Acme Manufacturing&#10;Bayside Logistics&#10;Cedar Grove Farms"></textarea>
+          </div>
+        </div>
+        <div class="row">
+          <div class="field grow">
+            <input type="text" id="clientAddOne" placeholder="Add a single client…">
+          </div>
+          <button type="button" id="clientImport" class="primary">Import / Add</button>
+          <button type="button" id="clientClear">Clear list</button>
+        </div>
+        <ul id="clientList"></ul>
+        <p class="soft-note">The client list is saved in this browser and will be here next time. Nothing is uploaded anywhere.</p>
+      </div>
+    </section>
+
+    <!-- ============ HISTORY ============ -->
+    <section class="card">
+      <h2>History <span class="hint" id="micHint"></span></h2>
+
+      <div class="row">
+        <div class="field grow">
+          <label for="chiefComplaint">Chief complaint(s) <span class="hint">— dictate or type</span></label>
+          <div class="ta-wrap">
+            <textarea id="chiefComplaint" rows="2" placeholder="e.g. Right shoulder pain after lifting a pallet"></textarea>
+            <button type="button" class="mic" data-mic="chiefComplaint" title="Dictate">🎤</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="field grow">
+          <label>Body parts involved</label>
+          <div class="seg" id="sideSeg">
+            <button type="button" data-side="" class="on">no side</button>
+            <button type="button" data-side="left">left</button>
+            <button type="button" data-side="right">right</button>
+            <button type="button" data-side="bilateral">bilateral</button>
+          </div>
+          <div class="chips" id="partChips" style="margin-top:6px"></div>
+          <div class="row" style="margin-top:6px">
+            <input type="text" id="partCustom" placeholder="Other body part… (press Enter to add)" style="flex:1">
+          </div>
+          <div class="picked" id="pickedParts"></div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="field" style="max-width:200px">
+          <label for="painLevel">Pain level today (0–10)</label>
+          <select id="painLevel">
+            <option value="">— not stated —</option>
+            <option>0</option><option>1</option><option>2</option><option>3</option><option>4</option>
+            <option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Initial-visit history -->
+      <div class="init-only">
+        <div class="row">
+          <div class="field grow">
+            <label for="sinceInjury">What has been done since the day of injury? <span class="hint">— ice, meds, ER/urgent care, nothing, etc.</span></label>
+            <div class="ta-wrap">
+              <textarea id="sinceInjury" rows="2" placeholder="e.g. Applied ice at home and took OTC ibuprofen; no other care sought"></textarea>
+              <button type="button" class="mic" data-mic="sinceInjury" title="Dictate">🎤</button>
+            </div>
+          </div>
+        </div>
+        <div class="row" id="workedSinceBlock">
+          <div class="field grow">
+            <label>Has the employee been working since the injury? <span class="hint">— shown because the visit is more than a day after the injury</span></label>
+            <div class="radio-row">
+              <label><input type="radio" name="workedSince" value="full"> Yes — full duty</label>
+              <label><input type="radio" name="workedSince" value="modified"> Yes — modified duty</label>
+              <label><input type="radio" name="workedSince" value="no"> No — has not worked</label>
+              <label><input type="radio" name="workedSince" value="" checked> Not stated</label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recheck history -->
+      <div class="recheck-only">
+        <div class="row">
+          <div class="field grow">
+            <label for="intervalHistory">What's been going on since the last visit? <span class="hint">— dictate or type</span></label>
+            <div class="ta-wrap">
+              <textarea id="intervalHistory" rows="3" placeholder="e.g. Pain improving with therapy; still sore with overhead reaching"></textarea>
+              <button type="button" class="mic" data-mic="intervalHistory" title="Dictate">🎤</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="field grow">
+            <label>Orders from the last visit &amp; authorization status</label>
+            <div id="ordersRows"></div>
+            <div><button type="button" id="addOrder">＋ Add an order</button></div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="field grow">
+            <label>Therapy sessions <span class="hint">— completed vs. authorized/requested</span></label>
+            <div id="therapyRows"></div>
+            <div><button type="button" id="addTherapy">＋ Add therapy</button></div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="field grow">
+            <label for="specialistSeen">Seen by a specialist since the last visit? <span class="hint">— leave blank if none</span></label>
+            <div class="ta-wrap">
+              <textarea id="specialistSeen" rows="2" placeholder="e.g. Evaluated by orthopedics (Dr. Lee) on 8/12; recommended continuing PT"></textarea>
+              <button type="button" class="mic" data-mic="specialistSeen" title="Dictate">🎤</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ PLAN & WORK STATUS ============ -->
+    <section class="card">
+      <h2>Today's plan &amp; work status</h2>
+
+      <div class="row">
+        <div class="field grow">
+          <label>Work status</label>
+          <div class="radio-row">
+            <label><input type="radio" name="workStatus" value="full" checked> Full duty — no restrictions</label>
+            <label><input type="radio" name="workStatus" value="modified"> Modified duty</label>
+            <label><input type="radio" name="workStatus" value="off"> Off work</label>
+          </div>
+        </div>
+      </div>
+
+      <div class="row" id="restrictionsBlock">
+        <div class="field grow">
+          <label>Restrictions</label>
+          <div class="check-list">
+            <label class="check"><input type="checkbox" id="rLift"> No lifting, pushing, or pulling over
+              <input type="number" id="rLiftLbs" value="10" min="1" max="100"> lbs</label>
+            <label class="check"><input type="checkbox" id="rOverhead"> No overhead reaching</label>
+            <label class="check"><input type="checkbox" id="rRepetitive"> No repetitive use of the affected extremity</label>
+            <label class="check"><input type="checkbox" id="rSplint"> Splint/brace to be worn at work</label>
+            <label class="check"><input type="checkbox" id="rKneel"> No kneeling, squatting, or crawling</label>
+            <label class="check"><input type="checkbox" id="rLadders"> No climbing ladders</label>
+            <label class="check"><input type="checkbox" id="rSitStand"> May alternate sitting and standing as needed</label>
+            <label class="check"><input type="checkbox" id="rSeated"> Seated work only</label>
+          </div>
+          <div class="ta-wrap" style="margin-top:6px">
+            <textarea id="rOther" rows="2" placeholder="Other restrictions — one per line"></textarea>
+            <button type="button" class="mic" data-mic="rOther" title="Dictate">🎤</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="field grow">
+          <label>First aid claim? <span class="hint">— mostly relevant on the first visit</span></label>
+          <div class="radio-row">
+            <label><input type="radio" name="firstAid" value="yes"> Yes — meets first aid criteria</label>
+            <label><input type="radio" name="firstAid" value="no"> No — not first aid</label>
+            <label><input type="radio" name="firstAid" value="" checked> Not addressed</label>
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="field grow">
+          <label for="medsDispensed">Medications dispensed / prescribed today</label>
+          <div class="chips" data-append="medsDispensed">
+            <button type="button" class="chip">Ibuprofen 600 mg</button>
+            <button type="button" class="chip">Naproxen 500 mg</button>
+            <button type="button" class="chip">Acetaminophen 500 mg</button>
+            <button type="button" class="chip">Topical analgesic</button>
+            <button type="button" class="chip">Methocarbamol 750 mg</button>
+          </div>
+          <div class="ta-wrap" style="margin-top:6px">
+            <textarea id="medsDispensed" rows="2" placeholder="One per line — leave blank if none"></textarea>
+            <button type="button" class="mic" data-mic="medsDispensed" title="Dictate">🎤</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="field grow">
+          <label for="dmeDispensed">DME dispensed today</label>
+          <div class="chips" data-append="dmeDispensed">
+            <button type="button" class="chip">Wrist splint</button>
+            <button type="button" class="chip">Ankle brace</button>
+            <button type="button" class="chip">Knee sleeve</button>
+            <button type="button" class="chip">Shoulder sling</button>
+            <button type="button" class="chip">Lumbar support</button>
+            <button type="button" class="chip">Cold pack</button>
+            <button type="button" class="chip">TENS unit</button>
+            <button type="button" class="chip">Walking boot</button>
+            <button type="button" class="chip">Crutches</button>
+          </div>
+          <div class="ta-wrap" style="margin-top:6px">
+            <textarea id="dmeDispensed" rows="2" placeholder="One per line — leave blank if none"></textarea>
+            <button type="button" class="mic" data-mic="dmeDispensed" title="Dictate">🎤</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="field grow">
+          <label for="referrals">Referrals / orders requested today</label>
+          <div class="chips" data-append="referrals">
+            <button type="button" class="chip">Physical therapy — eval &amp; treat</button>
+            <button type="button" class="chip">Acupuncture</button>
+            <button type="button" class="chip">Chiropractic</button>
+            <button type="button" class="chip">X-ray</button>
+            <button type="button" class="chip">MRI</button>
+            <button type="button" class="chip">Orthopedic consult</button>
+          </div>
+          <div class="ta-wrap" style="margin-top:6px">
+            <textarea id="referrals" rows="2" placeholder="One per line — leave blank if none"></textarea>
+            <button type="button" class="mic" data-mic="referrals" title="Dictate">🎤</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label for="followUp">Follow-up</label>
+          <select id="followUp">
+            <option value="2">In 2 days</option>
+            <option value="3">In 3 days</option>
+            <option value="5">In 5 days</option>
+            <option value="7" selected>In 1 week</option>
+            <option value="10">In 10 days</option>
+            <option value="14">In 2 weeks</option>
+            <option value="21">In 3 weeks</option>
+            <option value="28">In 4 weeks</option>
+            <option value="custom">Pick a date…</option>
+            <option value="none">No follow-up — discharged from care</option>
+          </select>
+        </div>
+        <div class="field hidden" id="followUpCustomField">
+          <label for="followUpCustom">Follow-up date</label>
+          <input type="date" id="followUpCustom">
+        </div>
+      </div>
+    </section>
+
+    <div class="row">
+      <button type="button" id="clearForm">🧹 Clear form (start next patient)</button>
+    </div>
+  </div>
+
+  <!-- ============ OUTPUT ============ -->
+  <div class="out-col">
+    <div class="tabs">
+      <button type="button" id="tabNote" class="on">Work Note</button>
+      <button type="button" id="tabStatus">Work Status</button>
+    </div>
+    <div class="out-actions">
+      <button type="button" class="primary" id="copyBtn">📄 Copy to clipboard</button>
+      <button type="button" id="printBtn">🖨 Print</button>
+      <span class="copied-note" id="copiedNote">Copied ✓</span>
+    </div>
+    <pre class="out print-target" id="noteOut"></pre>
+    <pre class="out hidden" id="statusOut"></pre>
+  </div>
+</div>
+
+<footer class="foot">
+  Notes are generated on this device only and are never sent anywhere.
+  The client list and your clinic/provider names are remembered in this browser; patient fields are kept only until the tab is closed or the form is cleared.
+</footer>
+
+<script>
+'use strict';
+
+/* ---------------- helpers ---------------- */
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '');
+
+function parseLocalDate(v) {           // 'YYYY-MM-DD' -> local Date (avoids UTC off-by-one)
+  if (!v) return null;
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(v);
+  if (!m) return null;
+  return new Date(+m[1], +m[2] - 1, +m[3]);
+}
+function fmtDate(d) {
+  if (!d) return null;
+  return String(d.getMonth() + 1).padStart(2, '0') + '/' +
+         String(d.getDate()).padStart(2, '0') + '/' + d.getFullYear();
+}
+function toISO(d) {
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' +
+         String(d.getDate()).padStart(2, '0');
+}
+function daysBetween(a, b) {           // whole days from a to b
+  return Math.round((b - a) / 86400000);
+}
+function agoPhrase(n) {
+  if (n === 0) return 'earlier today';
+  if (n === 1) return 'yesterday';
+  if (n > 1) return n + ' days ago';
+  return null;                          // future/invalid — say nothing
+}
+function listSentence(items) {
+  if (items.length === 0) return '';
+  if (items.length === 1) return items[0];
+  if (items.length === 2) return items[0] + ' and ' + items[1];
+  return items.slice(0, -1).join(', ') + ', and ' + items[items.length - 1];
+}
+function lines(text) {                  // textarea -> trimmed non-empty lines
+  return esc(text).split('\n').map(s => s.trim().replace(/^[-•*]\s*/, '')).filter(Boolean);
+}
+function sentenceCase(s) {
+  s = s.trim();
+  if (!s) return s;
+  s = s[0].toUpperCase() + s.slice(1);
+  if (!/[.!?]$/.test(s)) s += '.';
+  return s;
+}
+const PRONOUNS = {
+  they: { subj: 'they', obj: 'them', poss: 'their', have: 'have', is: 'are', s: '' },
+  he:   { subj: 'he',   obj: 'him',  poss: 'his',   have: 'has',  is: 'is',  s: 's' },
+  she:  { subj: 'she',  obj: 'her',  poss: 'her',   have: 'has',  is: 'is',  s: 's' },
+};
+function radioVal(name) {
+  const el = document.querySelector('input[name="' + name + '"]:checked');
+  return el ? el.value : '';
+}
+function setRadio(name, value) {
+  const el = document.querySelector('input[name="' + name + '"][value="' + value + '"]');
+  if (el) el.checked = true;
+}
+
+/* ---------------- client list (localStorage) ---------------- */
+const CLIENT_KEY = 'worknote.clients.v1';
+const PREF_KEY = 'worknote.prefs.v1';
+let clients = [];
+
+function loadClients() {
+  try { clients = JSON.parse(localStorage.getItem(CLIENT_KEY)) || []; }
+  catch (e) { clients = []; }
+  if (!Array.isArray(clients)) clients = [];
+}
+function saveClients() {
+  try { localStorage.setItem(CLIENT_KEY, JSON.stringify(clients)); } catch (e) {}
+}
+function addClients(names) {
+  let added = 0;
+  const existing = new Set(clients.map(c => c.toLowerCase()));
+  for (let name of names) {
+    name = name.trim();
+    if (!name || existing.has(name.toLowerCase())) continue;
+    clients.push(name);
+    existing.add(name.toLowerCase());
+    added++;
+  }
+  clients.sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+  saveClients();
+  renderClients();
+  return added;
+}
+function parseClientText(text) {
+  const out = [];
+  const rows = esc(text).split(/\r\n|\r|\n/);
+  for (let i = 0; i < rows.length; i++) {
+    let row = rows[i].trim();
+    if (!row) continue;
+    // take the first cell of a CSV/TSV row; honor simple quoted cells
+    let cell;
+    if (row[0] === '"') {
+      const m = /^"((?:[^"]|"")*)"/.exec(row);
+      cell = m ? m[1].replace(/""/g, '"') : row;
+    } else {
+      cell = row.split(/[,\t;]/)[0];
+    }
+    cell = cell.trim().replace(/^"|"$/g, '');
+    if (!cell) continue;
+    // skip a header row like "Client", "Company Name", "Employer"
+    if (i === 0 && /^(clients?|compan(y|ies)|employers?|names?|company name|client name|employer name)$/i.test(cell)) continue;
+    out.push(cell);
+  }
+  return out;
+}
+function renderClients() {
+  const sel = $('clientSelect');
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">— select client —</option>';
+  for (const c of clients) {
+    const o = document.createElement('option');
+    o.value = c; o.textContent = c;
+    sel.appendChild(o);
+  }
+  if (clients.includes(cur)) sel.value = cur;
+
+  const ul = $('clientList');
+  ul.innerHTML = '';
+  if (!clients.length) {
+    ul.innerHTML = '<li class="none">No clients yet — upload or paste a list above.</li>';
+    return;
+  }
+  for (const c of clients) {
+    const li = document.createElement('li');
+    const span = document.createElement('span');
+    span.textContent = c;
+    const del = document.createElement('button');
+    del.type = 'button'; del.className = 'subtle'; del.textContent = '✕';
+    del.title = 'Remove ' + c;
+    del.addEventListener('click', () => {
+      clients = clients.filter(x => x !== c);
+      saveClients(); renderClients(); regen();
+    });
+    li.appendChild(span); li.appendChild(del);
+    ul.appendChild(li);
+  }
+}
+
+/* ---------------- body parts picker ---------------- */
+const SIDED_PARTS = ['shoulder', 'upper arm', 'elbow', 'forearm', 'wrist', 'hand', 'thumb', 'finger(s)',
+                     'hip', 'thigh', 'knee', 'lower leg', 'ankle', 'foot', 'toe(s)', 'eye', 'ribs'];
+const UNSIDED_PARTS = ['head', 'face', 'neck', 'chest', 'abdomen', 'upper back', 'mid back', 'lower back', 'groin'];
+let bodyParts = [];    // e.g. ['right shoulder', 'lower back']
+let currentSide = '';
+
+function renderPartChips() {
+  const box = $('partChips');
+  box.innerHTML = '';
+  for (const p of [...SIDED_PARTS, ...UNSIDED_PARTS]) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'chip'; b.textContent = p;
+    b.addEventListener('click', () => {
+      const sided = SIDED_PARTS.includes(p);
+      addBodyPart(sided && currentSide ? currentSide + ' ' + p : p);
+    });
+    box.appendChild(b);
+  }
+}
+function addBodyPart(part) {
+  part = part.trim();
+  if (!part) return;
+  if (!bodyParts.some(x => x.toLowerCase() === part.toLowerCase())) {
+    bodyParts.push(part);
+    renderPicked(); regen(); saveDraft();
+  }
+}
+function renderPicked() {
+  const box = $('pickedParts');
+  box.innerHTML = '';
+  if (!bodyParts.length) {
+    box.innerHTML = '<span class="none">Nothing selected yet — tap a part above (pick a side first if it matters).</span>';
+    return;
+  }
+  bodyParts.forEach((p, i) => {
+    const tag = document.createElement('span');
+    tag.className = 'tag';
+    const t = document.createElement('span'); t.textContent = p;
+    const del = document.createElement('button');
+    del.type = 'button'; del.textContent = '✕'; del.title = 'Remove';
+    del.addEventListener('click', () => {
+      bodyParts.splice(i, 1);
+      renderPicked(); regen(); saveDraft();
+    });
+    tag.appendChild(t); tag.appendChild(del);
+    box.appendChild(tag);
+  });
+}
+
+/* ---------------- dynamic rows: orders & therapy ---------------- */
+function addOrderRow(text, status) {
+  const row = document.createElement('div');
+  row.className = 'dyn-row order-row';
+  row.innerHTML =
+    '<input type="text" class="o-text" placeholder="e.g. MRI right shoulder">' +
+    '<select class="o-status">' +
+      '<option value="approved">Approved</option>' +
+      '<option value="not approved">Not approved</option>' +
+      '<option value="pending">Pending authorization</option>' +
+    '</select>' +
+    '<button type="button" class="x" title="Remove">✕</button>';
+  row.querySelector('.o-text').value = text || '';
+  row.querySelector('.o-status').value = status || 'pending';
+  row.querySelector('.x').addEventListener('click', () => { row.remove(); regen(); saveDraft(); });
+  $('ordersRows').appendChild(row);
+}
+function addTherapyRow(type, done, auth) {
+  const row = document.createElement('div');
+  row.className = 'dyn-row therapy-row';
+  row.innerHTML =
+    '<select class="t-type">' +
+      '<option>Physical therapy</option>' +
+      '<option>Acupuncture</option>' +
+      '<option>Chiropractic</option>' +
+    '</select>' +
+    '<input type="number" class="t-done" min="0" max="99" placeholder="done"> of ' +
+    '<input type="number" class="t-auth" min="0" max="99" placeholder="auth."> sessions' +
+    '<button type="button" class="x" title="Remove">✕</button>';
+  row.querySelector('.t-type').value = type || 'Physical therapy';
+  row.querySelector('.t-done').value = done ?? '';
+  row.querySelector('.t-auth').value = auth ?? '';
+  row.querySelector('.x').addEventListener('click', () => { row.remove(); regen(); saveDraft(); });
+  $('therapyRows').appendChild(row);
+}
+function readOrders() {
+  return [...document.querySelectorAll('.order-row')].map(r => ({
+    text: r.querySelector('.o-text').value.trim(),
+    status: r.querySelector('.o-status').value,
+  })).filter(o => o.text);
+}
+function readTherapy() {
+  return [...document.querySelectorAll('.therapy-row')].map(r => ({
+    type: r.querySelector('.t-type').value,
+    done: r.querySelector('.t-done').value,
+    auth: r.querySelector('.t-auth').value,
+  })).filter(t => t.done !== '' || t.auth !== '');
+}
+
+/* ---------------- gather everything ---------------- */
+function gather() {
+  const visitDate = parseLocalDate($('visitDate').value);
+  const injuryDate = parseLocalDate($('injuryDate').value);
+  const lastVisitDate = parseLocalDate($('lastVisitDate').value);
+
+  let followUpDate = null, discharged = false;
+  const fu = $('followUp').value;
+  if (fu === 'none') discharged = true;
+  else if (fu === 'custom') followUpDate = parseLocalDate($('followUpCustom').value);
+  else if (visitDate) followUpDate = new Date(visitDate.getFullYear(), visitDate.getMonth(), visitDate.getDate() + Number(fu));
+
+  const restrictions = [];
+  if ($('rLift').checked) restrictions.push('No lifting, pushing, or pulling over ' + (Number($('rLiftLbs').value) || 10) + ' lbs');
+  if ($('rOverhead').checked) restrictions.push('No overhead reaching');
+  if ($('rRepetitive').checked) restrictions.push('No repetitive use of the affected extremity');
+  if ($('rSplint').checked) restrictions.push('Splint/brace to be worn at work');
+  if ($('rKneel').checked) restrictions.push('No kneeling, squatting, or crawling');
+  if ($('rLadders').checked) restrictions.push('No climbing ladders');
+  if ($('rSitStand').checked) restrictions.push('May alternate sitting and standing as needed');
+  if ($('rSeated').checked) restrictions.push('Seated work only');
+  restrictions.push(...lines($('rOther').value));
+
+  return {
+    visitType: $('visitType').value,
+    clinic: $('clinicName').value.trim(),
+    provider: $('providerName').value.trim(),
+    client: $('clientSelect').value.trim(),
+    employee: $('employeeName').value.trim(),
+    pn: PRONOUNS[$('pronouns').value] || PRONOUNS.they,
+    visitDate, injuryDate, lastVisitDate,
+    cc: $('chiefComplaint').value.trim(),
+    bodyParts: bodyParts.slice(),
+    pain: $('painLevel').value,
+    sinceInjury: $('sinceInjury').value.trim(),
+    workedSince: radioVal('workedSince'),
+    intervalHistory: $('intervalHistory').value.trim(),
+    orders: readOrders(),
+    therapy: readTherapy(),
+    specialist: $('specialistSeen').value.trim(),
+    workStatus: radioVal('workStatus'),
+    restrictions,
+    firstAid: radioVal('firstAid'),
+    meds: lines($('medsDispensed').value),
+    dme: lines($('dmeDispensed').value),
+    referrals: lines($('referrals').value),
+    followUpDate, discharged,
+    followUpChoice: fu,
+  };
+}
+
+/* ---------------- note builders ---------------- */
+function headerBlock(d, title) {
+  const out = [];
+  out.push(title);
+  out.push('='.repeat(title.length));
+  if (d.clinic) out.push(d.clinic);
+  out.push('');
+  out.push('Date of visit:   ' + (fmtDate(d.visitDate) || '[date of visit]'));
+  out.push('Employee:        ' + (d.employee || '[employee name]'));
+  out.push('Employer:        ' + (d.client || '[client / employer]'));
+  out.push('Date of injury:  ' + (fmtDate(d.injuryDate) || '[date of injury]'));
+  if (d.visitType === 'recheck') out.push('Last visit:      ' + (fmtDate(d.lastVisitDate) || '[date of last visit]'));
+  return out;
+}
+
+function planBlock(d) {
+  const out = [];
+  out.push('PLAN');
+  if (d.meds.length) out.push('Medications dispensed/prescribed: ' + d.meds.join('; ') + '.');
+  if (d.dme.length) out.push('DME dispensed: ' + d.dme.join('; ') + '.');
+  if (d.referrals.length) out.push('Referrals/orders requested: ' + d.referrals.join('; ') + '.');
+  if (!d.meds.length && !d.dme.length && !d.referrals.length) out.push('No medications, DME, or referrals today.');
+
+  if (d.workStatus === 'full') {
+    out.push('Work status: released to full duty without restrictions.');
+  } else if (d.workStatus === 'modified') {
+    out.push('Work status: modified duty with the following restrictions:');
+    if (d.restrictions.length) d.restrictions.forEach(r => out.push('  - ' + r));
+    else out.push('  - [no restrictions entered]');
+  } else {
+    out.push('Work status: off work' + (d.followUpDate ? ' through ' + fmtDate(d.followUpDate) : ', to be re-evaluated at the next visit') + '.');
+  }
+
+  if (d.firstAid === 'yes') out.push('This injury meets first aid criteria.');
+  else if (d.firstAid === 'no') out.push('This injury does not meet first aid criteria.');
+
+  if (d.discharged) out.push('Follow-up: none — discharged from care today.');
+  else if (d.followUpDate) {
+    const inDays = d.visitDate ? daysBetween(d.visitDate, d.followUpDate) : null;
+    out.push('Follow-up: return to clinic on ' + fmtDate(d.followUpDate) + (inDays ? ' (in ' + inDays + (inDays === 1 ? ' day' : ' days') + ')' : '') + '.');
+  } else {
+    out.push('Follow-up: [follow-up date]');
+  }
+  return out;
+}
+
+function buildInitialNote(d) {
+  const p = d.pn;
+  const name = d.employee || 'The patient';
+  const out = headerBlock(d, 'WORK INJURY — INITIAL VISIT');
+  out.push('');
+
+  out.push('CHIEF COMPLAINT');
+  out.push(d.cc ? sentenceCase(d.cc)
+                : (d.bodyParts.length ? sentenceCase(listSentence(d.bodyParts) + ' pain') : '[chief complaint]'));
+  out.push('');
+
+  out.push('HISTORY OF PRESENT ILLNESS');
+  const hpi = [];
+  let s1 = name + ' presents for initial evaluation of a work-related injury sustained';
+  if (d.injuryDate) {
+    s1 += ' on ' + fmtDate(d.injuryDate);
+    const n = d.visitDate ? daysBetween(d.injuryDate, d.visitDate) : null;
+    const ago = n === null ? null : agoPhrase(n);
+    if (ago) s1 += ' (' + ago + ')';
+  } else {
+    s1 += ' on [date of injury]';
+  }
+  if (d.client) s1 += ' while working for ' + d.client;
+  s1 += '.';
+  hpi.push(s1);
+  if (d.bodyParts.length) hpi.push(cap(p.subj) + ' report' + p.s + ' symptoms involving the ' + listSentence(d.bodyParts) + '.');
+  if (d.cc) hpi.push(sentenceCase(d.cc));
+  if (d.pain !== '') hpi.push(cap(p.subj) + ' rate' + p.s + ' the pain today at ' + d.pain + '/10.');
+  if (d.sinceInjury) hpi.push('Since the day of injury: ' + sentenceCase(d.sinceInjury));
+  if (d.workedSince === 'full') hpi.push(cap(p.subj) + ' ' + p.have + ' continued working full duty since the injury.');
+  else if (d.workedSince === 'modified') hpi.push(cap(p.subj) + ' ' + p.have + ' been working modified duty since the injury.');
+  else if (d.workedSince === 'no') hpi.push(cap(p.subj) + ' ' + p.have + ' not worked since the injury.');
+  out.push(hpi.join(' '));
+  out.push('');
+
+  out.push(...planBlock(d));
+  return out.join('\n');
+}
+
+function buildRecheckNote(d) {
+  const p = d.pn;
+  const name = d.employee || 'The patient';
+  const out = headerBlock(d, 'WORK INJURY — RECHECK VISIT');
+  out.push('');
+
+  out.push('INTERVAL HISTORY');
+  const ih = [];
+  let s1 = name + ' returns for a recheck of ' + p.poss + ' work-related injury';
+  if (d.bodyParts.length) s1 += ' involving the ' + listSentence(d.bodyParts);
+  if (d.injuryDate) s1 += ' sustained on ' + fmtDate(d.injuryDate);
+  if (d.client) s1 += ' while working for ' + d.client;
+  s1 += '.';
+  ih.push(s1);
+  if (d.cc) ih.push(sentenceCase(d.cc));
+  if (d.intervalHistory) {
+    ih.push('Since the last visit' + (d.lastVisitDate ? ' on ' + fmtDate(d.lastVisitDate) : '') + ': ' + sentenceCase(d.intervalHistory));
+  }
+  if (d.pain !== '') ih.push(cap(p.subj) + ' rate' + p.s + ' the pain today at ' + d.pain + '/10.');
+  out.push(ih.join(' '));
+  out.push('');
+
+  if (d.orders.length) {
+    out.push('ORDERS FROM LAST VISIT');
+    for (const o of d.orders) {
+      const label = o.status === 'pending' ? 'pending authorization' : o.status;
+      out.push('  - ' + o.text + ' — ' + label);
+    }
+    out.push('');
+  }
+
+  if (d.therapy.length) {
+    out.push('THERAPY SESSIONS');
+    for (const t of d.therapy) out.push('  - ' + therapyLine(t));
+    out.push('');
+  }
+
+  if (d.specialist) {
+    out.push('SPECIALIST CARE SINCE LAST VISIT');
+    out.push(sentenceCase(d.specialist));
+    out.push('');
+  }
+
+  out.push(...planBlock(d));
+  return out.join('\n');
+}
+
+function therapyLine(t) {
+  const done = t.done === '' ? '0' : String(Number(t.done));
+  if (t.auth !== '') {
+    return t.type + ': ' + done + ' of ' + Number(t.auth) + ' authorized sessions completed.';
+  }
+  return t.type + ': ' + done + ' session' + (Number(done) === 1 ? '' : 's') + ' completed.';
+}
+
+function buildWorkStatus(d) {
+  const out = [];
+  out.push('WORK STATUS REPORT');
+  out.push('==================');
+  if (d.clinic) out.push(d.clinic);
+  out.push('');
+  out.push('Date:            ' + (fmtDate(d.visitDate) || '[date of visit]'));
+  out.push('Employee:        ' + (d.employee || '[employee name]'));
+  out.push('Employer:        ' + (d.client || '[client / employer]'));
+  out.push('Date of injury:  ' + (fmtDate(d.injuryDate) || '[date of injury]'));
+  out.push('Visit type:      ' + (d.visitType === 'initial' ? 'Initial visit' : 'Follow-up / recheck'));
+  out.push('');
+
+  out.push('WORK STATUS');
+  const from = fmtDate(d.visitDate) || '[date of visit]';
+  const through = d.followUpDate ? fmtDate(d.followUpDate) : null;
+  if (d.workStatus === 'full') {
+    out.push('May work FULL DUTY without restrictions as of ' + from + '.');
+  } else if (d.workStatus === 'modified') {
+    out.push('May work MODIFIED DUTY from ' + from + (through ? ' through ' + through : '') + ' with the following restrictions:');
+    if (d.restrictions.length) d.restrictions.forEach(r => out.push('  • ' + r));
+    else out.push('  • [no restrictions entered]');
+    out.push('If modified duty is not available, the employee should remain off work for this period.');
+  } else {
+    out.push('OFF WORK from ' + from + (through ? ' through ' + through : '') + '. To be re-evaluated at the next visit.');
+  }
+  out.push('');
+
+  if (d.firstAid === 'yes') {
+    out.push('FIRST AID: This visit meets first aid criteria.');
+    out.push('');
+  } else if (d.firstAid === 'no') {
+    out.push('FIRST AID: This visit does not meet first aid criteria.');
+    out.push('');
+  }
+
+  out.push('DISPENSED AT THIS VISIT');
+  if (d.meds.length) out.push('Medications: ' + d.meds.join('; '));
+  if (d.dme.length) out.push('DME: ' + d.dme.join('; '));
+  if (!d.meds.length && !d.dme.length) out.push('None.');
+  out.push('');
+
+  out.push('REFERRALS REQUESTED');
+  if (d.referrals.length) d.referrals.forEach(r => out.push('  • ' + r));
+  else out.push('None.');
+  out.push('');
+
+  out.push('NEXT FOLLOW-UP');
+  if (d.discharged) out.push('None — discharged from care.');
+  else out.push(through || '[follow-up date]');
+  out.push('');
+  out.push('');
+  out.push('Provider: ' + (d.provider || '________________________________'));
+  return out.join('\n');
+}
+
+function cap(s) { return s ? s[0].toUpperCase() + s.slice(1) : s; }
+
+/* ---------------- regenerate & UI state ---------------- */
+function regen() {
+  const d = gather();
+
+  // visit-type sections
+  document.querySelectorAll('.init-only').forEach(el => el.classList.toggle('hidden', d.visitType !== 'initial'));
+  document.querySelectorAll('.recheck-only').forEach(el => el.classList.toggle('hidden', d.visitType !== 'recheck'));
+
+  // "working since injury" only matters when the visit is >1 day after the injury
+  const gap = (d.visitDate && d.injuryDate) ? daysBetween(d.injuryDate, d.visitDate) : null;
+  $('workedSinceBlock').classList.toggle('hidden', !(d.visitType === 'initial' && gap !== null && gap > 1));
+
+  // restrictions only for modified duty
+  $('restrictionsBlock').classList.toggle('hidden', d.workStatus !== 'modified');
+
+  // custom follow-up date field
+  $('followUpCustomField').classList.toggle('hidden', d.followUpChoice !== 'custom');
+
+  $('noteOut').textContent = d.visitType === 'initial' ? buildInitialNote(d) : buildRecheckNote(d);
+  $('statusOut').textContent = buildWorkStatus(d);
+}
+
+/* ---------------- output tabs / copy / print ---------------- */
+let activeTab = 'note';
+function setTab(tab) {
+  activeTab = tab;
+  $('tabNote').classList.toggle('on', tab === 'note');
+  $('tabStatus').classList.toggle('on', tab === 'status');
+  $('noteOut').classList.toggle('hidden', tab !== 'note');
+  $('statusOut').classList.toggle('hidden', tab !== 'status');
+  $('noteOut').classList.toggle('print-target', tab === 'note');
+  $('statusOut').classList.toggle('print-target', tab === 'status');
+}
+async function copyActive() {
+  const text = (activeTab === 'note' ? $('noteOut') : $('statusOut')).textContent;
+  let ok = false;
+  try { await navigator.clipboard.writeText(text); ok = true; }
+  catch (e) {
+    const ta = document.createElement('textarea');
+    ta.value = text; document.body.appendChild(ta);
+    ta.select();
+    try { ok = document.execCommand('copy'); } catch (e2) {}
+    ta.remove();
+  }
+  const note = $('copiedNote');
+  note.textContent = ok ? 'Copied ✓' : 'Copy failed — select the text and copy manually';
+  note.classList.add('show');
+  setTimeout(() => note.classList.remove('show'), 1800);
+}
+function printActive() {
+  document.body.classList.add('printing');
+  window.print();
+}
+window.addEventListener('afterprint', () => document.body.classList.remove('printing'));
+
+/* ---------------- dictation (Web Speech API) ---------------- */
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+let activeRec = null, activeMicBtn = null;
+
+function stopDictation() {
+  if (activeRec) { try { activeRec.stop(); } catch (e) {} }
+  if (activeMicBtn) activeMicBtn.classList.remove('listening');
+  activeRec = null; activeMicBtn = null;
+}
+function startDictation(btn, targetId) {
+  stopDictation();
+  const target = $(targetId);
+  const rec = new SR();
+  rec.lang = 'en-US';
+  rec.continuous = true;
+  rec.interimResults = false;
+  rec.onresult = ev => {
+    let text = '';
+    for (let i = ev.resultIndex; i < ev.results.length; i++) {
+      if (ev.results[i].isFinal) text += ev.results[i][0].transcript;
+    }
+    text = text.trim();
+    if (!text) return;
+    target.value = (target.value ? target.value.replace(/\s+$/, '') + ' ' : '') + text;
+    target.dispatchEvent(new Event('input', { bubbles: true }));
+  };
+  rec.onend = () => { if (activeRec === rec) stopDictation(); };
+  rec.onerror = () => { if (activeRec === rec) stopDictation(); };
+  activeRec = rec; activeMicBtn = btn;
+  btn.classList.add('listening');
+  try { rec.start(); } catch (e) { stopDictation(); }
+}
+function wireDictation() {
+  const buttons = document.querySelectorAll('button.mic');
+  if (!SR) {
+    buttons.forEach(b => b.classList.add('hidden'));
+    $('micHint').textContent = '(built-in dictation needs Chrome, Edge, or Safari — your device dictation works in any field)';
+    return;
+  }
+  buttons.forEach(b => b.addEventListener('click', () => {
+    if (activeMicBtn === b) stopDictation();
+    else startDictation(b, b.dataset.mic);
+  }));
+}
+
+/* ---------------- draft autosave (sessionStorage) ---------------- */
+const DRAFT_KEY = 'worknote.draft.v1';
+let restoring = false;
+
+function saveDraft() {
+  if (restoring) return;
+  const fields = {};
+  document.querySelectorAll('#app input[id], #app select[id], #app textarea[id]').forEach(el => {
+    if (el.type === 'file') return;
+    fields[el.id] = el.type === 'checkbox' ? el.checked : el.value;
+  });
+  const draft = {
+    fields,
+    radios: { workedSince: radioVal('workedSince'), workStatus: radioVal('workStatus'), firstAid: radioVal('firstAid') },
+    bodyParts,
+    orders: [...document.querySelectorAll('.order-row')].map(r => ({
+      text: r.querySelector('.o-text').value, status: r.querySelector('.o-status').value,
+    })),
+    therapy: [...document.querySelectorAll('.therapy-row')].map(r => ({
+      type: r.querySelector('.t-type').value, done: r.querySelector('.t-done').value, auth: r.querySelector('.t-auth').value,
+    })),
+  };
+  try { sessionStorage.setItem(DRAFT_KEY, JSON.stringify(draft)); } catch (e) {}
+}
+function restoreDraft() {
+  let draft = null;
+  try { draft = JSON.parse(sessionStorage.getItem(DRAFT_KEY)); } catch (e) {}
+  if (!draft) return;
+  restoring = true;
+  for (const [id, val] of Object.entries(draft.fields || {})) {
+    const el = $(id);
+    if (!el) continue;
+    if (el.type === 'checkbox') el.checked = !!val;
+    else el.value = val;
+  }
+  for (const [name, val] of Object.entries(draft.radios || {})) setRadio(name, val);
+  bodyParts = Array.isArray(draft.bodyParts) ? draft.bodyParts : [];
+  (draft.orders || []).forEach(o => addOrderRow(o.text, o.status));
+  (draft.therapy || []).forEach(t => addTherapyRow(t.type, t.done, t.auth));
+  restoring = false;
+}
+function clearForm() {
+  try { sessionStorage.removeItem(DRAFT_KEY); } catch (e) {}
+  // keep: clinic/provider (prefs), client list; reset everything patient-specific
+  ['employeeName', 'chiefComplaint', 'sinceInjury', 'intervalHistory', 'specialistSeen',
+   'rOther', 'medsDispensed', 'dmeDispensed', 'referrals', 'injuryDate', 'lastVisitDate',
+   'followUpCustom', 'partCustom'].forEach(id => { $(id).value = ''; });
+  $('clientSelect').value = '';
+  $('pronouns').value = 'they';
+  $('painLevel').value = '';
+  $('followUp').value = '7';
+  ['rLift', 'rOverhead', 'rRepetitive', 'rSplint', 'rKneel', 'rLadders', 'rSitStand', 'rSeated']
+    .forEach(id => { $(id).checked = false; });
+  $('rLiftLbs').value = 10;
+  setRadio('workedSince', ''); setRadio('workStatus', 'full'); setRadio('firstAid', '');
+  bodyParts = [];
+  $('ordersRows').innerHTML = '';
+  $('therapyRows').innerHTML = '';
+  $('visitDate').value = toISO(new Date());
+  renderPicked();
+  regen();
+}
+
+/* ---------------- prefs (clinic/provider names, localStorage) ---------------- */
+function loadPrefs() {
+  try {
+    const p = JSON.parse(localStorage.getItem(PREF_KEY)) || {};
+    if (p.clinic) $('clinicName').value = p.clinic;
+    if (p.provider) $('providerName').value = p.provider;
+  } catch (e) {}
+}
+function savePrefs() {
+  try {
+    localStorage.setItem(PREF_KEY, JSON.stringify({
+      clinic: $('clinicName').value.trim(),
+      provider: $('providerName').value.trim(),
+    }));
+  } catch (e) {}
+}
+
+/* ---------------- wiring ---------------- */
+function init() {
+  loadClients();
+  loadPrefs();
+  renderClients();
+  renderPartChips();
+
+  $('visitDate').value = toISO(new Date());
+  restoreDraft();
+  renderPicked();
+
+  // any input anywhere regenerates + autosaves
+  $('app').addEventListener('input', () => { regen(); saveDraft(); });
+  $('app').addEventListener('change', () => { regen(); saveDraft(); });
+  $('clinicName').addEventListener('input', () => { savePrefs(); regen(); });
+  $('providerName').addEventListener('input', () => { savePrefs(); regen(); });
+
+  // side segment
+  $('sideSeg').addEventListener('click', ev => {
+    const b = ev.target.closest('button[data-side]');
+    if (!b) return;
+    currentSide = b.dataset.side;
+    document.querySelectorAll('#sideSeg button').forEach(x => x.classList.toggle('on', x === b));
+  });
+
+  // custom body part
+  $('partCustom').addEventListener('keydown', ev => {
+    if (ev.key === 'Enter') {
+      ev.preventDefault();
+      addBodyPart($('partCustom').value);
+      $('partCustom').value = '';
+    }
+  });
+
+  // quick chips that append a line to a textarea
+  document.querySelectorAll('.chips[data-append]').forEach(box => {
+    box.addEventListener('click', ev => {
+      const chip = ev.target.closest('button.chip');
+      if (!chip) return;
+      const ta = $(box.dataset.append);
+      const line = chip.textContent.trim();
+      ta.value = ta.value.trim() ? ta.value.trim() + '\n' + line : line;
+      ta.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+  });
+
+  // dynamic rows
+  $('addOrder').addEventListener('click', () => { addOrderRow(); regen(); saveDraft(); });
+  $('addTherapy').addEventListener('click', () => { addTherapyRow(); regen(); saveDraft(); });
+
+  // client management
+  $('toggleClients').addEventListener('click', () => $('clientPanel').classList.toggle('hidden'));
+  $('clientFile').addEventListener('change', ev => {
+    const file = ev.target.files && ev.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const added = addClients(parseClientText(reader.result));
+      alert(added + (added === 1 ? ' client' : ' clients') + ' added.');
+      ev.target.value = '';
+    };
+    reader.readAsText(file);
+  });
+  $('clientImport').addEventListener('click', () => {
+    const names = [...parseClientText($('clientPaste').value)];
+    const one = $('clientAddOne').value.trim();
+    if (one) names.push(one);
+    const added = addClients(names);
+    $('clientPaste').value = ''; $('clientAddOne').value = '';
+    if (added) { /* list re-rendered */ } else if (names.length) alert('Those clients are already on the list.');
+    regen();
+  });
+  $('clientAddOne').addEventListener('keydown', ev => {
+    if (ev.key === 'Enter') { ev.preventDefault(); $('clientImport').click(); }
+  });
+  $('clientClear').addEventListener('click', () => {
+    if (confirm('Remove ALL clients from the saved list?')) {
+      clients = []; saveClients(); renderClients(); regen();
+    }
+  });
+
+  // outputs
+  $('tabNote').addEventListener('click', () => setTab('note'));
+  $('tabStatus').addEventListener('click', () => setTab('status'));
+  $('copyBtn').addEventListener('click', copyActive);
+  $('printBtn').addEventListener('click', printActive);
+  $('clearForm').addEventListener('click', () => {
+    if (confirm('Clear all patient fields and start the next note? (Your client list and clinic/provider names are kept.)')) clearForm();
+  });
+
+  wireDictation();
+  regen();
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
