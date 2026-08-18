@@ -8,7 +8,7 @@
   /* ---------------------------------------------------------
      1. THE STORY
      One evening in Grace Park, told as a map of places.
-     Each choice flies a number of metres and names the place it
+     Each choice flies a number of feet and names the place it
      lands in next, so different answers take different paths.
      Every path ends at the Star Meadow.
      --------------------------------------------------------- */
@@ -899,7 +899,7 @@
     ctx.fillStyle = '#4b9c3c';
     ctx.font = '700 13px Nunito, system-ui, sans-serif';
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText(metres + 'm', x, y - 50 * S + 11);
+    ctx.fillText(metres + 'ft', x, y - 50 * S + 11);
   }
 
   function drawRowFar(cam) {
@@ -1154,7 +1154,7 @@
       game.planeM = game.distM;
       game.alt = 26 * Math.sin(Math.PI * rw.t) + 2;
       game.rot -= dt * 9;                      // a backwards barrel roll
-      el.hudTotal.textContent = Math.round(game.distM) + ' m';
+      el.hudTotal.textContent = Math.round(game.distM) + ' ft';
       game.camTarget = camFor(game.planeM);
       game.cam += (game.camTarget - game.cam) * Math.min(1, dt * 6);
       trail.push({ x: planeScreenX(), y: planeScreenY(), life: 1 });
@@ -1515,13 +1515,13 @@
   }
 
   function liveDistance(gain, total) {
-    el.flyDistance.textContent = '+' + gain + ' m';
-    el.hudTotal.textContent = total + ' m';
+    el.flyDistance.textContent = '+' + gain + ' ft';
+    el.hudTotal.textContent = total + ' ft';
   }
 
   function updateHud() {
     el.hudStop.textContent = String(game.stop);
-    el.hudTotal.textContent = Math.round(game.distM) + ' m';
+    el.hudTotal.textContent = Math.round(game.distM) + ' ft';
   }
 
   var bubble = document.createElement('div');
@@ -1530,7 +1530,7 @@
 
   // resolves with 'continue', or 'redo' when a do-over is spent
   function showBubble(gain, note, redoLeft) {
-    bubble.innerHTML = '<span class="gain">+' + gain + ' metres!</span>' +
+    bubble.innerHTML = '<span class="gain">+' + gain + ' feet!</span>' +
                        '<p class="note"></p>' +
                        (redoLeft > 0
                          ? '<button type="button" class="bubble-redo">&#128260; Do-over &mdash; fly that one again (' +
@@ -1582,12 +1582,26 @@
     if (speech.auto && audio.on) speech.say(lines);
   }
 
+  var choiceOrder = [];        // display position -> original choice index
+
+  function shuffled(n) {
+    var a = [];
+    for (var i = 0; i < n; i++) a.push(i);
+    for (var j = a.length - 1; j > 0; j--) {
+      var k = Math.floor(Math.random() * (j + 1));
+      var t = a[j]; a[j] = a[k]; a[k] = t;
+    }
+    return a;
+  }
+
   function sceneLines(q) {
     var btns = el.qChoices.querySelectorAll('.choice');
     var lines = [q.story, q.q];
-    q.choices.forEach(function (c, n) {
-      lines.push({ text: 'Number ' + (n + 1) + '. ' + c.t, mark: btns[n] });
-    });
+    for (var pos = 0; pos < choiceOrder.length; pos++) {
+      var c = q.choices[choiceOrder[pos]];
+      lines.push({ text: 'Number ' + (pos + 1) + '.', mark: btns[pos] });
+      lines.push({ text: c.t, mark: btns[pos] });
+    }
     return lines;
   }
 
@@ -1600,13 +1614,16 @@
     el.qText.textContent = q.q;
     el.qChoices.innerHTML = '';
 
-    q.choices.forEach(function (c, i) {
+    choiceOrder = shuffled(q.choices.length);
+    window.__pppOrder = choiceOrder.slice();     // for tests
+    choiceOrder.forEach(function (orig, pos) {
+      var c = q.choices[orig];
       var b = document.createElement('button');
       b.type = 'button';
       b.className = 'choice';
-      b.innerHTML = '<span class="key">' + (i + 1) + '</span><span class="txt"></span>';
+      b.innerHTML = '<span class="key">' + (pos + 1) + '</span><span class="txt"></span>';
       b.querySelector('.txt').textContent = c.t;
-      b.addEventListener('click', function () { choose(i); });
+      b.addEventListener('click', function () { choose(orig, b); });
       el.qChoices.appendChild(b);
     });
 
@@ -1631,12 +1648,15 @@
 
   function keyPick(e) {
     var n = parseInt(e.key, 10);
-    if (n >= 1 && n <= SCENES[game.sceneId].choices.length) choose(n - 1);
+    if (n >= 1 && n <= choiceOrder.length) {
+      var btns = el.qChoices.querySelectorAll('.choice');
+      choose(choiceOrder[n - 1], btns[n - 1]);
+    }
   }
 
   var answering = false;
 
-  function choose(i) {
+  function choose(i, btnEl) {
     if (answering) return;
     answering = true;
     var startM = game.distM;
@@ -1652,10 +1672,10 @@
     var buttons = el.qChoices.children;
     for (var b = 0; b < buttons.length; b++) {
       buttons[b].disabled = true;
-      buttons[b].classList.add(b === i ? 'picked' : 'dim');
+      buttons[b].classList.add(buttons[b] === btnEl ? 'picked' : 'dim');
     }
 
-    speech.preload([choice.m + ' metres! ' + choice.f]);
+    speech.preload([choice.m + ' feet! ' + choice.f]);
     setTimeout(function () {
       hidePanel(el.question).then(function () {
         el.placeTag.textContent = '\u2192 ' + (choice.next ? SCENES[choice.next].place
@@ -1668,7 +1688,7 @@
       }).then(function () {
         hide(el.flyMeter);
         updateHud();
-        if (speech.auto && audio.on) speech.say([choice.m + ' metres! ' + choice.f]);
+        if (speech.auto && audio.on) speech.say([choice.m + ' feet! ' + choice.f]);
         return showBubble(choice.m, choice.f, game.lifelines);
       }).then(function (action) {
         if (action === 'redo' && game.lifelines > 0) {
@@ -1743,7 +1763,7 @@
       name.textContent = stop.place;
       var m = document.createElement('span');
       m.className = 'journey-metres';
-      m.textContent = '+' + stop.gain + ' m';
+      m.textContent = '+' + stop.gain + ' ft';
       li.appendChild(name); li.appendChild(m);
       el.journeyList.appendChild(li);
     });
@@ -1761,12 +1781,12 @@
     el.resultEmoji.innerHTML = m.emoji;
     el.resultTitle.textContent = m.title;
     el.resultMessage.textContent = m.msg;
-    el.finalDistance.textContent = total + ' m';
+    el.finalDistance.textContent = total + ' ft';
     el.resultBest.innerHTML = isRecord
       ? (best > 0
-          ? '&#127881; New record! Your old best was <strong>' + best + ' m</strong>.'
+          ? '&#127881; New record! Your old best was <strong>' + best + ' ft</strong>.'
           : '&#127881; Your very first flight is on the record board!')
-      : 'Your best flight so far: <strong>' + Math.max(best, total) + ' m</strong>';
+      : 'Your best flight so far: <strong>' + Math.max(best, total) + ' ft</strong>';
     show(el.result);
     audio.fanfare();
     if (speech.auto && audio.on) speech.say([m.title, m.msg]);
@@ -1840,7 +1860,7 @@
   /* ---------- boot ---------- */
   var savedBest = parseInt(store.get('ppp_best', '0'), 10) || 0;
   if (savedBest > 0) {
-    el.bestValue.textContent = savedBest + ' m';
+    el.bestValue.textContent = savedBest + ' ft';
     el.bestLine.classList.remove('hidden');
   }
   el.muteIcon.innerHTML = audio.on ? '&#128266;' : '&#128263;';

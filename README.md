@@ -20,7 +20,9 @@ on its own.
 * A short **How to Fly** card opens the game — the narrator tells the pilot that
   braver, kinder answers push the plane farther, and that there are three do-overs.
   It appears from the title screen; "Fly Again" jumps straight back into the park.
-* Tap (or click) an answer, or press `1` `2` `3` `4`.
+* Tap (or click) an answer, or press `1` `2` `3` `4` for whatever is listed at that
+  spot — the answers appear in a different order every time, so the best one is never
+  just "always press 1".
 * Watch the plane fly. The bigger the answer, the farther it goes.
 * After each landing, the reply doesn't just score the answer — on questions with a
   real better-and-worse (worries, unkindness, mistakes, peer pressure...) it explains
@@ -28,10 +30,10 @@ on its own.
   questions (what excites you, what you want to be remembered for) keep simple warm
   replies with no ranking lecture.
 * **3 do-overs per flight**: every landing card offers "Do-over — fly that one again".
-  The plane loops back to that stop, the metres roll back, and the question opens
+  The plane loops back to that stop, the feet roll back, and the question opens
   again for a different answer. The journey map only records the final answer.
 * Tap anywhere to keep flying.
-* 11 stops on the brave route, up to **550 m**. A wobbly answer sends the plane to a
+* 11 stops on the brave route, up to **550 ft**. A wobbly answer sends the plane to a
   gentler place first, so a run can be up to 15 stops. The best distance is remembered
   on that device.
 * The ending screen maps the whole journey — every place the plane landed and what it
@@ -65,7 +67,7 @@ than a punishment:
 | Hiding a mistake at the Climbing Tree | The Bramble Patch | They ask what happened — what do you say? |
 | Going along with it at the Little Bridge | The Crossroads | What do you do with the wobbly feeling? |
 
-Detours are worth fewer metres than the main route, so they never turn a shaky run into
+Detours are worth fewer feet than the main route, so they never turn a shaky run into
 a winning one — but finding the way out of one is called out by name on the ending
 screen, because it should be.
 
@@ -110,7 +112,7 @@ lawn: {
 * `story` — the line of story above the question
 * `q` — the question
 * `t` — the answer text on the button
-* `m` — metres that answer flies (best answers `50`, wobbly ones around `15`)
+* `m` — feet that answer flies (best answers `50`, wobbly ones around `15`)
 * `next` — the id of the place that answer flies to, or `null` to end the story
 * `f` — the friendly reply shown after the plane lands
 

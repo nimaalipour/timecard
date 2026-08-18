@@ -33,9 +33,9 @@ for (const id of Object.keys(SCENES)) {
   const sc = SCENES[id];
   texts.add(sc.story);
   texts.add(sc.q);
-  sc.choices.forEach((c, n) => {
-    texts.add('Number ' + (n + 1) + '. ' + c.t);
-    texts.add(c.m + " metres! " + c.f);
+  sc.choices.forEach((c) => {
+    texts.add(c.t);                        // answers shuffle, so the position
+    texts.add(c.m + " feet! " + c.f);      // numbers are separate little clips
   });
 }
 // the how-to-fly card, extracted from game.js like SCENES
@@ -53,7 +53,8 @@ for (const tier of [0.95, 0.8, 0.6, 0.1])   // one total per medal, MAX_M = 1
     texts.add(m.msg);
   }
 // and fail loudly if the spoken-line templates in game.js ever change shape
-for (const tpl of ["'Number ' + (n + 1) + '. ' + c.t", "choice.m + ' metres! ' + choice.f"]) {
+for (let n = 1; n <= 4; n++) texts.add('Number ' + n + '.');
+for (const tpl of ["'Number ' + (pos + 1) + '.'", "choice.m + ' feet! ' + choice.f"]) {
   if (!src.includes(tpl)) throw new Error('voicepack template drifted from game.js: ' + tpl);
 }
 
