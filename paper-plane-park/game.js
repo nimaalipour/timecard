@@ -6,120 +6,281 @@
   'use strict';
 
   /* ---------------------------------------------------------
-     1. THE QUESTIONS
-     Every answer flies. Kind, honest, brave answers fly farthest,
-     and no answer is ever called "wrong".
+     1. THE STORY
+     One evening in Grace Park, told as a map of places.
+     Each choice flies a number of metres and names the place it
+     lands in next, so different answers take different paths.
+     Every path ends at the Star Meadow.
      --------------------------------------------------------- */
-  var QUESTIONS = [
-    {
+  var PILOT = 'Grayson';
+  var START = 'lawn';
+
+  var SCENES = {
+
+    lawn: {
+      place: 'The Take-Off Lawn',
+      story: 'The sun is going down over Grace Park. Tomorrow is the first day of school. ' +
+             'You fold a paper plane and hold it up to the wind.',
       q: 'What are you most excited about this year?',
       choices: [
-        { t: 'Learning new things — I want to read bigger books!', m: 50,
+        { t: 'Learning new things — I want to read bigger books!', m: 50, next: 'willow',
           f: 'Being excited to learn gives your plane a huge push!' },
-        { t: 'Seeing my friends and playing at recess!', m: 40,
+        { t: 'Seeing my friends and playing at recess!', m: 40, next: 'willow',
           f: 'Friends make school feel warm. Nice lift!' },
-        { t: 'Snack time. Only snack time.', m: 25,
-          f: 'Snacks are great! See if you can find one more thing too.' },
-        { t: "Nothing. I don't want to talk about it.", m: 15,
+        { t: 'Snack time. Only snack time.', m: 25, next: 'willow',
+          f: 'Snacks are the best. See if you can find one more thing too.' },
+        { t: "Nothing. I don't want to talk about it.", m: 15, next: 'willow',
           f: 'That is okay. Naming one small good thing helps your plane climb.' }
       ]
     },
-    {
+
+    willow: {
+      place: 'The Whispering Willow',
+      story: 'The plane lands under a willow tree. Its branches move like they are listening.',
       q: 'What are you nervous about?',
       choices: [
-        { t: 'I tell Mom or Dad the worry out loud.', m: 50,
+        { t: 'I tell Mama or Dada the worry out loud.', m: 50, next: 'bench',
           f: 'Saying a worry out loud makes it smaller. Big lift!' },
-        { t: 'I draw or write what is bugging me.', m: 40,
+        { t: 'I draw the worry on paper so I can see it.', m: 45, next: 'bench',
           f: 'Getting the worry outside your head really works.' },
-        { t: 'I try hard not to think about it.', m: 25,
-          f: 'Worries get quieter when we share them, not when we hide them.' },
-        { t: 'I say "I\'m fine" even when I am not.', m: 15,
-          f: 'You are allowed to say the true thing. People want to help.' }
+        { t: 'I try hard not to think about it.', m: 20, next: 'hollow',
+          f: 'Hidden worries get heavier. Look where the plane is heading...' },
+        { t: 'I say "I\'m fine" even when I am not.', m: 15, next: 'hollow',
+          f: 'You are allowed to say the true thing. The plane knows.' }
       ]
     },
-    {
-      q: 'What will you do if someone is unkind to you?',
+
+    hollow: {
+      place: 'The Quiet Hollow',
+      story: 'The plane dips into a hollow where the grass grows tall. The worry is still in your ' +
+             'pocket, and it feels heavier than it did this morning.',
+      q: 'It is bedtime and the worry is still there. What do you do?',
       choices: [
-        { t: '"I don\'t like when you talk to me that way. Please stop."', m: 50,
-          f: 'Strong, calm words. Practising them makes them easy to find!' },
-        { t: 'Walk away and tell my teacher.', m: 45,
-          f: 'Getting a grown-up is a brave choice, not a tattle.' },
-        { t: 'Say nothing and feel bad all day.', m: 20,
-          f: 'Your feelings matter. Telling someone lightens the load.' },
-        { t: 'Say something mean right back.', m: 15,
-          f: 'Mean words bounce back and forth. Yours can stop the bounce.' }
+        { t: 'Go find Mama or Dada and say it out loud.', m: 30, next: 'bench',
+          f: 'There it goes — the worry just got smaller. Up you climb!' },
+        { t: 'Whisper it to my stuffed animal first.', m: 25, next: 'bench',
+          f: 'A good first step. Grown-ups can help carry it too.' },
+        { t: 'Pull the blanket over my head.', m: 10, next: 'bench',
+          f: 'Worries wait for us. Telling someone is the thing that shrinks them.' }
       ]
     },
-    {
+
+    bench: {
+      place: 'The Friendship Bench',
+      story: 'You spot a bench at the edge of the playground. Someone is sitting on it all by themselves.',
       q: 'What if you see someone sitting alone?',
       choices: [
-        { t: 'Ask them, "Do you want to play with me?"', m: 50,
+        { t: 'Ask them, "Do you want to play with me?"', m: 50, next: 'pond',
           f: 'Kids who imagine reaching out become the kids who do. Soar!' },
-        { t: 'Sit next to them and say hello.', m: 45,
+        { t: 'Sit next to them and say hello.', m: 45, next: 'pond',
           f: 'Just sitting close can make someone\'s whole day.' },
-        { t: 'Smile and wave from far away.', m: 30,
-          f: 'A good start! An invitation would fly even farther.' },
-        { t: 'Keep playing with my own friends.', m: 20,
+        { t: 'Smile and wave from far away.', m: 30, next: 'pond',
+          f: 'A good start! An invitation flies even farther.' },
+        { t: 'Keep playing with my own friends.', m: 20, next: 'pond',
           f: 'Your friends are lucky. There is room for one more, too.' }
       ]
     },
-    {
+
+    pond: {
+      place: 'The Duck Pond',
+      story: 'The plane glides over the pond. A big kid on the far side laughs at your throw and ' +
+             'says something unkind about it.',
+      q: 'What will you do if someone is unkind to you?',
+      choices: [
+        { t: '"I don\'t like when you talk to me that way. Please stop."', m: 50, next: 'kitehill',
+          f: 'Strong, calm words. Practising them makes them easy to find!' },
+        { t: 'Walk away and tell my teacher.', m: 45, next: 'kitehill',
+          f: 'Getting a grown-up is a brave choice, not a tattle.' },
+        { t: 'Say nothing and feel bad all day.', m: 20, next: 'puddle',
+          f: 'Your feelings matter. Keeping them in makes the plane heavy.' },
+        { t: 'Say something mean right back.', m: 15, next: 'puddle',
+          f: 'Mean words bounce back and forth. Yours can stop the bounce.' }
+      ]
+    },
+
+    puddle: {
+      place: 'The Mud Puddle',
+      story: 'Your plane lands nose-first in a puddle. The unkind words are still stuck in your ' +
+             'head the next morning.',
+      q: 'It happens again at recess. What now?',
+      choices: [
+        { t: 'Use my calm strong words, then go find my teacher.', m: 30, next: 'kitehill',
+          f: 'That is how you get unstuck. Wings dry, off you go!' },
+        { t: 'Go and play somewhere else with someone kind.', m: 28, next: 'kitehill',
+          f: 'Choosing kind people is a superpower.' },
+        { t: 'Keep it a secret from everyone.', m: 10, next: 'kitehill',
+          f: 'Secrets like this get heavy. A grown-up can carry it with you.' }
+      ]
+    },
+
+    kitehill: {
+      place: 'Kite Hill',
+      story: 'Up on Kite Hill the wind is perfect. Two kids you have never met share their kite ' +
+             'string with you.',
+      q: 'What does being a good friend look like?',
+      choices: [
+        { t: 'Listening — and respecting it when someone says no.', m: 50, next: 'chalkrock',
+          f: 'Friendship is a skill, and you just named it. Huge lift!' },
+        { t: 'Including someone new, even for one game.', m: 48, next: 'chalkrock',
+          f: 'That is exactly it. One invitation changes a whole day.' },
+        { t: 'Saying sorry when I get it wrong.', m: 46, next: 'chalkrock',
+          f: 'Real friends repair things. That takes courage.' },
+        { t: 'Everyone playing the game I picked.', m: 15, next: 'chalkrock',
+          f: 'Taking turns picking is the friend part. Try it tomorrow!' }
+      ]
+    },
+
+    chalkrock: {
+      place: 'The Chalk Rock',
+      story: 'Someone has chalked sums all over a flat rock. One of them has a number you have ' +
+             'never seen before.',
       q: "What if you don't understand something in class?",
       choices: [
-        { t: 'Raise my hand and ask the teacher.', m: 50,
+        { t: 'Raise my hand and ask the teacher.', m: 50, next: 'windyfield',
           f: 'Asking questions is what smart pilots do!' },
-        { t: 'Ask a friend quietly after the lesson.', m: 40,
+        { t: 'Ask a friend quietly after the lesson.', m: 40, next: 'windyfield',
           f: 'Good plan. Teachers love the question too.' },
-        { t: 'Try it once more on my own first.', m: 35,
+        { t: 'Try it once more on my own first.', m: 35, next: 'windyfield',
           f: 'Nice grit! And help is always allowed.' },
-        { t: 'Pretend I understand it.', m: 15,
+        { t: 'Pretend I understand it.', m: 15, next: 'windyfield',
           f: 'Nobody knows everything yet. Asking is how the "yet" disappears.' }
       ]
     },
-    {
-      q: 'What if you make a mistake?',
-      choices: [
-        { t: '"Mistakes are how my brain grows." Then try again.', m: 50,
-          f: 'Kids who normalise mistakes grow. Rocket lift!' },
-        { t: 'Tell someone and ask for help fixing it.', m: 45,
-          f: 'Owning it takes real courage.' },
-        { t: 'Feel embarrassed and stop trying.', m: 20,
-          f: 'Everyone feels that. It fades faster when you try again.' },
-        { t: 'Hide it so nobody finds out.', m: 15,
-          f: 'Hidden mistakes get heavy. Shared ones get fixed.' }
-      ]
-    },
-    {
+
+    windyfield: {
+      place: 'The Windy Field',
+      story: 'The wind turns. Three throws in a row, the plane loops around and lands behind you.',
       q: 'What if you start to feel really frustrated?',
       choices: [
-        { t: 'Take three slow belly breaths.', m: 50,
+        { t: 'Take three slow belly breaths.', m: 50, next: 'climbtree',
           f: 'Slow breaths tell your body it is safe. Whoosh!' },
-        { t: 'Take a short break, then try again.', m: 45,
+        { t: 'Take a short break, then try again.', m: 45, next: 'climbtree',
           f: 'Brains solve things better after a little rest.' },
-        { t: 'Ask someone to do it for me.', m: 25,
+        { t: 'Ask someone to do it for me.', m: 25, next: 'climbtree',
           f: 'Help is great — try "show me how" instead of "do it for me".' },
-        { t: 'Yell and give up.', m: 15,
+        { t: 'Yell and give up.', m: 15, next: 'climbtree',
           f: 'Big feelings are okay. Big breaths come first.' }
       ]
     },
-    {
-      q: 'What is one kind thing you can do tomorrow?',
+
+    climbtree: {
+      place: 'The Climbing Tree',
+      story: 'You fold the wings again — but you fold them crooked, and the plane spins straight ' +
+             'up into the branches.',
+      q: 'What if you make a mistake?',
       choices: [
-        { t: 'Say good morning to someone new.', m: 50,
-          f: 'One hello can start a whole friendship!' },
-        { t: 'Share my snack or help clean up.', m: 45,
-          f: 'Helping hands make the day lighter for everyone.' },
-        { t: 'Cheer for someone who is trying hard.', m: 45,
-          f: 'Your cheering can be the thing that keeps them going.' },
-        { t: 'I will wait and see if I feel like it.', m: 20,
-          f: 'Kindness is a choice you get to make on purpose.' }
+        { t: '"Mistakes are how my brain grows." Then try again.', m: 50, next: 'bridge',
+          f: 'Kids who normalise mistakes grow. Rocket lift!' },
+        { t: 'Tell someone and ask for help fixing it.', m: 45, next: 'bridge',
+          f: 'Owning it takes real courage.' },
+        { t: 'Feel embarrassed and stop trying.', m: 20, next: 'bramble',
+          f: 'Everyone feels that. It fades faster when you try again.' },
+        { t: 'Hide it so nobody finds out.', m: 15, next: 'bramble',
+          f: 'Hidden mistakes get heavy. Shared ones get fixed.' }
+      ]
+    },
+
+    bramble: {
+      place: 'The Bramble Patch',
+      story: 'The plane is stuck deep in the brambles — and now somebody has noticed you standing there.',
+      q: 'They ask what happened. What do you say?',
+      choices: [
+        { t: '"I made a mistake. Can you help me fix it?"', m: 30, next: 'bridge',
+          f: 'That sentence gets you out of every bramble patch there is.' },
+        { t: '"I got it wrong, but I am going to try again."', m: 28, next: 'bridge',
+          f: 'Trying again is the whole trick. Off you go!' },
+        { t: '"It wasn\'t me."', m: 10, next: 'bridge',
+          f: 'Mistakes are allowed. Hiding them is what makes them grow.' }
+      ]
+    },
+
+    bridge: {
+      place: 'The Little Bridge',
+      story: 'A kid on the little bridge waves you over. "Throw your plane at the ducks," they say. ' +
+             '"Go on. Everyone is doing it."',
+      q: 'What if someone asks you to do something wrong?',
+      choices: [
+        { t: '"No." And I walk away.', m: 50, next: 'lantern',
+          f: 'You can always say no. You can always walk away. Beautiful flying!' },
+        { t: 'Say no, and tell Mama or Dada about it after.', m: 50, next: 'lantern',
+          f: 'And you will never be in trouble for telling. Not ever.' },
+        { t: 'Do it, but feel bad about it.', m: 18, next: 'crossroads',
+          f: 'That wobbly feeling is your own good sense talking.' },
+        { t: 'Do it so they still like me.', m: 15, next: 'crossroads',
+          f: 'A friend who needs you to do wrong things is not being a friend yet.' }
+      ]
+    },
+
+    crossroads: {
+      place: 'The Crossroads',
+      story: 'Two paths, and a wobbly feeling in your tummy — the kind you get when something ' +
+             'was not right.',
+      q: 'What do you do with the wobbly feeling?',
+      choices: [
+        { t: 'Tell Dada. I am never in trouble for telling.', m: 30, next: 'lantern',
+          f: 'Never in trouble for telling. That is a promise.' },
+        { t: 'Say sorry to whoever I hurt.', m: 28, next: 'lantern',
+          f: 'Saying sorry is how you turn the plane around.' },
+        { t: 'Try to forget it happened.', m: 10, next: 'lantern',
+          f: 'Wobbly feelings fade fastest when we say them out loud.' }
+      ]
+    },
+
+    lantern: {
+      place: 'The Lantern Path',
+      story: 'Little lanterns switch on along the path. Your plane throws a long shadow, like a ' +
+             'big kid\'s.',
+      q: 'What do you want people to remember about you?',
+      choices: [
+        { t: 'That I was kind, and I made people feel included.', m: 50, next: 'stars',
+          f: 'That is the kind of kid you already are.' },
+        { t: 'That I was brave and I kept trying.', m: 48, next: 'stars',
+          f: 'Brave is not "not scared". Brave is trying anyway.' },
+        { t: 'That I was funny and fun to be with.', m: 40, next: 'stars',
+          f: 'Making people laugh is a real gift. Kindness makes it stick.' },
+        { t: 'That I was the best at everything.', m: 20, next: 'stars',
+          f: 'Being best is tiring. Being kind is what people remember.' }
+      ]
+    },
+
+    stars: {
+      place: 'The Star Meadow',
+      story: 'Last throw of the night. Mama and Dada are waiting at the edge of the meadow, and ' +
+             'the first stars are coming out.',
+      q: 'No matter what happens tomorrow, what is one thing you will always know?',
+      choices: [
+        { t: 'I am loved. I am safe. And someone will always listen.', m: 50, next: null,
+          f: 'You are loved. You are safe. And we will always be here to listen.' },
+        { t: 'Mama and Dada are always on my team.', m: 48, next: null,
+          f: 'Always. Every single day, no matter what.' },
+        { t: 'I can always come home and talk about it.', m: 48, next: null,
+          f: 'The door is always open and the light is always on.' },
+        { t: 'I have to figure everything out by myself.', m: 20, next: null,
+          f: 'Never by yourself. Not ever. That is what a family is for.' }
       ]
     }
-  ];
+  };
 
-  var MAX_M = QUESTIONS.reduce(function (s, q) {
-    return s + Math.max.apply(null, q.choices.map(function (c) { return c.m; }));
-  }, 0);
+  // recovery stops — the gentler places you land after a wobbly answer
+  var DETOURS = { hollow: 1, puddle: 1, bramble: 1, crossroads: 1 };
+
+  // the longest possible flight, walked through the story graph
+  var MAX_M = (function () {
+    var memo = {};
+    function best(id) {
+      if (!id) return 0;
+      if (memo[id] !== undefined) return memo[id];
+      memo[id] = 0;                                   // guards against loops
+      var top = 0;
+      SCENES[id].choices.forEach(function (c) {
+        var total = c.m + best(c.next);
+        if (total > top) top = total;
+      });
+      memo[id] = top;
+      return top;
+    }
+    return best(START);
+  })();
 
   /* ---------------------------------------------------------
      2. SAVED SETTINGS + LITTLE SOUND BOX
@@ -740,7 +901,9 @@
      4. GAME STATE + LOOP
      --------------------------------------------------------- */
   var game = {
-    index: 0,
+    sceneId: START,
+    stop: 1,
+    journey: [],
     distM: 0,        // where the plane is parked, in metres
     planeM: 0,       // live plane position while flying
     alt: 0,          // height above the lane, px
@@ -898,9 +1061,9 @@
      --------------------------------------------------------- */
   var el = {
     hud: document.getElementById('hud'),
-    hudQuestion: document.getElementById('hudQuestion'),
+    hudStop: document.getElementById('hudStop'),
     hudTotal: document.getElementById('hudTotal'),
-    runway: document.getElementById('runway'),
+    placeTag: document.getElementById('placeTag'),
     flyMeter: document.getElementById('flyMeter'),
     flyDistance: document.getElementById('flyDistance'),
     start: document.getElementById('startScreen'),
@@ -908,8 +1071,10 @@
     bestLine: document.getElementById('bestLine'),
     bestValue: document.getElementById('bestValue'),
     question: document.getElementById('questionScreen'),
-    qCount: document.getElementById('qCount'),
+    qPlace: document.getElementById('qPlace'),
+    qStory: document.getElementById('qStory'),
     qText: document.getElementById('qText'),
+    journeyList: document.getElementById('journeyList'),
     qChoices: document.getElementById('qChoices'),
     result: document.getElementById('resultScreen'),
     resultEmoji: document.getElementById('resultEmoji'),
@@ -937,26 +1102,9 @@
     el.hudTotal.textContent = total + ' m';
   }
 
-  function buildRunway() {
-    el.runway.innerHTML = '';
-    for (var i = 0; i < QUESTIONS.length; i++) {
-      var d = document.createElement('span');
-      d.className = 'pip';
-      el.runway.appendChild(d);
-    }
-  }
-
-  function paintRunway() {
-    var pips = el.runway.children;
-    for (var i = 0; i < pips.length; i++) {
-      pips[i].className = 'pip' + (i < game.index ? ' done' : i === game.index ? ' current' : '');
-    }
-  }
-
   function updateHud() {
-    el.hudQuestion.textContent = Math.min(game.index + 1, QUESTIONS.length) + ' / ' + QUESTIONS.length;
+    el.hudStop.textContent = String(game.stop);
     el.hudTotal.textContent = Math.round(game.distM) + ' m';
-    paintRunway();
   }
 
   var bubble = document.createElement('div');
@@ -985,10 +1133,12 @@
     });
   }
 
-  function askQuestion() {
-    var q = QUESTIONS[game.index];
+  function askScene() {
+    var q = SCENES[game.sceneId];
+    hide(el.placeTag);
     updateHud();
-    el.qCount.textContent = 'Question ' + (game.index + 1) + ' of ' + QUESTIONS.length;
+    el.qPlace.textContent = 'Stop ' + game.stop + ' \u00b7 ' + q.place;
+    el.qStory.textContent = q.story;
     el.qText.textContent = q.q;
     el.qChoices.innerHTML = '';
 
@@ -1008,7 +1158,7 @@
       read.className = 'read-btn';
       read.innerHTML = '<span aria-hidden="true">&#128266;</span> Read it to me';
       read.addEventListener('click', function () {
-        var lines = [q.q];
+        var lines = [q.story, q.q];
         q.choices.forEach(function (c, n) { lines.push('Number ' + (n + 1) + '. ' + c.t); });
         speech.say(lines);
       });
@@ -1021,7 +1171,7 @@
 
   function keyPick(e) {
     var n = parseInt(e.key, 10);
-    if (n >= 1 && n <= QUESTIONS[game.index].choices.length) choose(n - 1);
+    if (n >= 1 && n <= SCENES[game.sceneId].choices.length) choose(n - 1);
   }
 
   var answering = false;
@@ -1033,7 +1183,7 @@
     speech.stop();
     audio.pick();
 
-    var q = QUESTIONS[game.index];
+    var q = SCENES[game.sceneId];
     var choice = q.choices[i];
     var best = Math.max.apply(null, q.choices.map(function (c) { return c.m; }));
     var quality = choice.m / best;
@@ -1046,6 +1196,9 @@
 
     setTimeout(function () {
       hidePanel(el.question).then(function () {
+        el.placeTag.textContent = '\u2192 ' + (choice.next ? SCENES[choice.next].place
+                                                            : 'The last throw of the night');
+        show(el.placeTag);
         show(el.flyMeter);
         audio.launch();
         return fly(choice.m, quality);
@@ -1056,9 +1209,14 @@
         return showBubble(choice.m, choice.f);
       }).then(function () {
         answering = false;
-        game.index++;
-        if (game.index >= QUESTIONS.length) finish();
-        else askQuestion();
+        game.journey.push({ place: q.place, gain: choice.m, detour: !!DETOURS[game.sceneId] });
+        if (choice.next) {
+          game.sceneId = choice.next;
+          game.stop++;
+          askScene();
+        } else {
+          finish();
+        }
       });
     }, 520);
   }
@@ -1077,16 +1235,38 @@
     });
   }
 
-  function medal(total) {
+  function medal(total, detours) {
     var pct = total / MAX_M;
-    if (pct >= 0.92) return { emoji: '&#127942;', title: 'Golden Wings!',
-      msg: 'You answered like a kind, brave pilot the whole way. Your plane flew right across the park!' };
-    if (pct >= 0.75) return { emoji: '&#129352;', title: 'Sky Champion!',
+    var m;
+    if (pct >= 0.90) m = { emoji: '&#127942;', title: 'Golden Wings!',
+      msg: PILOT + ' answered like a kind, brave pilot the whole way. The plane flew clear across Grace Park and landed in the stars.' };
+    else if (pct >= 0.72) m = { emoji: '&#129352;', title: 'Sky Champion!',
       msg: 'Wonderful flying. Big feelings, big words, big kindness.' };
-    if (pct >= 0.55) return { emoji: '&#129353;', title: 'Cloud Rider!',
-      msg: 'Great flight! Try again and see which answers lift you higher.' };
-    return { emoji: '&#127775;', title: 'Brave Take-Off!',
-      msg: 'Every pilot practises. Fly again and watch your park get bigger!' };
+    else if (pct >= 0.52) m = { emoji: '&#129353;', title: 'Cloud Rider!',
+      msg: 'A good long flight. Some answers lift the plane higher than others — go and find them!' };
+    else m = { emoji: '&#127775;', title: 'Brave Take-Off!',
+      msg: 'Every pilot practises. Fly again and watch the park get bigger.' };
+    if (detours) {
+      m.msg += ' You landed in ' + (detours > 1 ? 'some tricky places' : 'a tricky place') +
+               ' and found the way out again — that is the bravest kind of flying there is.';
+    }
+    return m;
+  }
+
+  function paintJourney() {
+    el.journeyList.innerHTML = '';
+    game.journey.forEach(function (stop) {
+      var li = document.createElement('li');
+      li.className = 'journey-stop' + (stop.detour ? ' journey-stop--detour' : '');
+      var name = document.createElement('span');
+      name.className = 'journey-place';
+      name.textContent = stop.place;
+      var m = document.createElement('span');
+      m.className = 'journey-metres';
+      m.textContent = '+' + stop.gain + ' m';
+      li.appendChild(name); li.appendChild(m);
+      el.journeyList.appendChild(li);
+    });
   }
 
   function finish() {
@@ -1095,7 +1275,9 @@
     var isRecord = total > best;
     if (isRecord) store.set('ppp_best', String(total));
 
-    var m = medal(total);
+    var detours = game.journey.filter(function (s2) { return s2.detour; }).length;
+    var m = medal(total, detours);
+    paintJourney();
     el.resultEmoji.innerHTML = m.emoji;
     el.resultTitle.textContent = m.title;
     el.resultMessage.textContent = m.msg;
@@ -1107,22 +1289,23 @@
       : 'Your best flight so far: <strong>' + Math.max(best, total) + ' m</strong>';
     show(el.result);
     audio.fanfare();
-    hide(el.runway);
+    hide(el.placeTag);
   }
 
   function startGame() {
     speech.stop();
-    game.index = 0;
+    game.sceneId = START;
+    game.stop = 1;
+    game.journey = [];
     game.distM = 0;
     game.planeM = 0;
     game.alt = 0;
     game.cam = CAM_MIN;
     game.camTarget = CAM_MIN;
     trail = []; puffs = []; sparkles = [];
-    show(el.hud); show(el.runway);
-    buildRunway();
+    show(el.hud);
     updateHud();
-    askQuestion();
+    askScene();
   }
 
   /* ---------- wiring ---------- */

@@ -1,9 +1,11 @@
 # Paper Plane Park ✈️
 
-A gentle browser game for a 7-year-old. Your child answers questions about a brave
-school day, and every answer launches a paper plane across a sunny green park.
-Kind, honest, courageous answers give the plane a bigger push, so the park keeps
-scrolling and the total distance keeps growing.
+A gentle browser game made for **Grayson Alipour** (7). One evening in Grace Park,
+one paper plane, and ten questions about a brave school day. Kind, honest,
+courageous answers give the plane a bigger push — and every answer decides where
+in the park it lands next, so the story takes a different route each time.
+
+> Inspiration for game: Mama (Grace Alipour) · Creator: Dada (Nima Alipour)
 
 ## How to play
 
@@ -18,17 +20,45 @@ on its own.
 * Tap (or click) an answer, or press `1` `2` `3` `4`.
 * Watch the plane fly. The bigger the answer, the farther it goes.
 * Tap anywhere to keep flying.
-* 8 questions per run, up to **400 m**. The best distance is remembered on that device.
+* 11 stops on the brave route, up to **550 m**. A wobbly answer sends the plane to a
+  gentler place first, so a run can be up to 15 stops. The best distance is remembered
+  on that device.
+* The ending screen maps the whole journey — every place the plane landed and what it
+  earned there.
 * **🔊 Read it to me** on each question reads the question and the choices out loud —
   handy for a new reader.
 * The speaker button in the top right mutes the sounds.
 
-## The idea behind the questions
+## The story
 
-The questions come from a set of back-to-school conversation starters:
-what you're excited about, what you're nervous about, what to do when someone is
-unkind, when someone is sitting alone, when you don't understand something,
-when you make a mistake, when you get frustrated, and one kind thing for tomorrow.
+The run is a walk across Grace Park at sunset, told as a map of places rather than a
+list of questions. The plane always starts on the Take-Off Lawn and always finishes in
+the Star Meadow; what happens in between depends on the answers.
+
+**The main route** — Take-Off Lawn → Whispering Willow → Friendship Bench → Duck Pond →
+Kite Hill → Chalk Rock → Windy Field → Climbing Tree → Little Bridge → Lantern Path →
+Star Meadow.
+
+**Four detours** open up after a wobbly answer, and each one is a second chance rather
+than a punishment:
+
+| Answer that leads there | Detour | What it asks |
+| --- | --- | --- |
+| Hiding a worry at the Willow | The Quiet Hollow | It's bedtime and the worry is still there — now what? |
+| Hitting back at the Duck Pond | The Mud Puddle | It happened again at recess — now what? |
+| Hiding a mistake at the Climbing Tree | The Bramble Patch | They ask what happened — what do you say? |
+| Going along with it at the Little Bridge | The Crossroads | What do you do with the wobbly feeling? |
+
+Detours are worth fewer metres than the main route, so they never turn a shaky run into
+a winning one — but finding the way out of one is called out by name on the ending
+screen, because it should be.
+
+The questions come from a set of back-to-school conversation starters: what you're
+excited about, what you're nervous about, when someone is unkind, when someone is
+sitting alone, when you don't understand something, when you make a mistake, when you
+get frustrated, what a good friend looks like, what to do when someone asks you to do
+something wrong, what you want people to remember about you, and the one thing you'll
+always know.
 
 Two design rules the game sticks to:
 
@@ -42,29 +72,36 @@ That means questions like *"What are you nervous about?"* score the *response*
 (telling someone, drawing it out) rather than the worry itself. Being nervous is
 never penalised.
 
-## Changing the questions
+## Changing the story
 
-All the content lives at the top of `paper-plane-park/game.js` in the `QUESTIONS`
-array — it's plain text and easy to edit:
+All the content lives at the top of `paper-plane-park/game.js` in the `SCENES` object —
+plain text, one entry per place:
 
 ```js
-{
+lawn: {
+  place: 'The Take-Off Lawn',
+  story: 'The sun is going down over Grace Park...',
   q: 'What are you most excited about this year?',
   choices: [
-    { t: 'Learning new things — I want to read bigger books!', m: 50,
+    { t: 'Learning new things — I want to read bigger books!', m: 50, next: 'willow',
       f: 'Being excited to learn gives your plane a huge push!' },
     ...
   ]
 }
 ```
 
+* `place` — the landmark name, shown on the card and during the flight
+* `story` — the line of story above the question
 * `q` — the question
 * `t` — the answer text on the button
-* `m` — metres that answer flies (keep the best one at `50`, weakest around `15`)
+* `m` — metres that answer flies (best answers `50`, wobbly ones around `15`)
+* `next` — the id of the place that answer flies to, or `null` to end the story
 * `f` — the friendly reply shown after the plane lands
 
-Add or remove whole questions freely; the progress dots, the medals and the maximum
-distance all recalculate themselves.
+Point two answers at different `next` ids and you've made a new fork. List any new
+recovery stop in `DETOURS` so the ending screen marks it in amber and mentions it.
+The longest possible flight is walked out of the graph automatically, so the medals and
+the size of the park keep up on their own.
 
 ## Files
 

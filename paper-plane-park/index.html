@@ -18,8 +18,8 @@
 <!-- ============ HUD ============ -->
 <header id="hud" class="hud hidden">
   <div class="hud-pill">
-    <span class="hud-label">Flight</span>
-    <span id="hudQuestion" class="hud-value">1 / 8</span>
+    <span class="hud-label">Stop</span>
+    <span id="hudStop" class="hud-value">1</span>
   </div>
   <div class="hud-pill hud-pill--wide">
     <span class="hud-label">Total distance</span>
@@ -30,7 +30,7 @@
   </button>
 </header>
 
-<div id="runway" class="runway hidden" aria-hidden="true"></div>
+<div id="placeTag" class="place-tag hidden" aria-hidden="true"></div>
 
 <!-- ============ LIVE DISTANCE ============ -->
 <div id="flyMeter" class="fly-meter hidden">
@@ -42,8 +42,19 @@
   <div class="card card--start">
     <div class="plane-badge">&#9992;&#65039;</div>
     <h1>Paper Plane Park</h1>
-    <p class="subtitle">Answer questions about a brave school day.<br>Great thinking makes your plane fly&nbsp;farther!</p>
-    <button id="startBtn" class="btn btn--big" type="button">Let&rsquo;s Fly!</button>
+    <p class="subtitle">One evening in Grace Park, one paper plane, and ten questions
+      about a brave school day. Every answer sends the plane somewhere new.</p>
+
+    <div class="plaque">
+      <p class="plaque-line">This game is made exclusively for</p>
+      <p class="plaque-name">Grayson Alipour</p>
+      <p class="plaque-credits">
+        Inspiration for game: Mama (Grace Alipour)<br>
+        Creator: Dada (Nima Alipour)
+      </p>
+    </div>
+
+    <button id="startBtn" class="btn btn--big" type="button">Let&rsquo;s Fly, Grayson!</button>
     <p id="bestLine" class="best-line hidden">Your best flight: <strong id="bestValue">0 m</strong></p>
     <p class="hint">Tip: you can also press <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> <kbd>4</kbd> to pick an answer.</p>
   </div>
@@ -52,7 +63,8 @@
 <!-- ============ QUESTION SCREEN ============ -->
 <section id="questionScreen" class="panel hidden">
   <div class="card card--question">
-    <div class="q-number"><span id="qCount">Question 1 of 8</span></div>
+    <div class="q-number"><span id="qPlace">The Take-Off Lawn</span></div>
+    <p id="qStory" class="story"></p>
     <h2 id="qText">Question</h2>
     <div id="qChoices" class="choices"></div>
   </div>
@@ -64,11 +76,16 @@
     <div id="resultEmoji" class="plane-badge">&#127942;</div>
     <h2 id="resultTitle">Amazing flying!</h2>
     <div class="score-box">
-      <span class="score-label">Total distance</span>
+      <span class="score-label">Grayson&rsquo;s total distance</span>
       <span id="finalDistance" class="score-value">0 m</span>
     </div>
     <p id="resultMessage" class="subtitle"></p>
+    <div class="journey-wrap">
+      <p class="journey-title">Where the plane took you</p>
+      <ol id="journeyList" class="journey"></ol>
+    </div>
     <div id="resultBest" class="best-line"></div>
+    <p class="hint">Different answers fly to different parts of the park &mdash; try again and see.</p>
     <button id="againBtn" class="btn btn--big" type="button">Fly Again</button>
   </div>
 </section>

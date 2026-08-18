@@ -53,21 +53,16 @@ body{
 }
 .icon-btn:active{transform:scale(.94)}
 
-/* ---------- Runway of plane pips ---------- */
-.runway{
-  position:fixed;left:0;right:0;
+/* ---------- Name of the place you are flying over ---------- */
+.place-tag{
+  position:fixed;left:50%;transform:translateX(-50%);
   top:calc(64px + env(safe-area-inset-top));
-  display:flex;justify-content:center;gap:7px;
   z-index:5;pointer-events:none;
+  font-family:"Baloo 2","Trebuchet MS",system-ui,sans-serif;
+  font-size:17px;font-weight:800;letter-spacing:.02em;color:#fff;
+  text-shadow:0 2px 0 rgba(24,80,60,.3), 0 6px 16px rgba(0,0,0,.25);
+  white-space:nowrap;
 }
-.pip{
-  width:13px;height:13px;border-radius:50%;
-  background:rgba(255,255,255,.55);
-  box-shadow:inset 0 0 0 2px rgba(255,255,255,.85);
-  transition:transform .3s ease, background .3s ease;
-}
-.pip.done{background:var(--sun);transform:scale(1.15)}
-.pip.current{background:#fff;transform:scale(1.35)}
 
 /* ---------- Live distance readout ---------- */
 .fly-meter{
@@ -122,6 +117,34 @@ body{
   display:inline-block;background:#eaf7e4;color:var(--grass-dark);
   font-weight:800;font-size:13px;letter-spacing:.06em;text-transform:uppercase;
   padding:6px 14px;border-radius:999px;margin-bottom:12px;
+}
+
+/* ---------- Dedication plaque ---------- */
+.plaque{
+  margin:2px 0 20px;padding:15px 16px 14px;
+  border-radius:18px;
+  background:linear-gradient(180deg,#fffdf3,#fff7e0);
+  box-shadow:inset 0 0 0 2px #f0dfa8;
+}
+.plaque-line{
+  margin:0;font-size:12px;font-weight:800;letter-spacing:.13em;text-transform:uppercase;
+  color:#b08a2e;
+}
+.plaque-name{
+  margin:3px 0 8px;
+  font-family:"Baloo 2","Trebuchet MS",system-ui,sans-serif;
+  font-size:clamp(24px,6.5vw,31px);font-weight:800;color:#8a6b1c;line-height:1.1;
+}
+.plaque-credits{
+  margin:0;font-size:13px;font-weight:700;line-height:1.6;color:#a08a5c;
+}
+
+/* ---------- Story line above each question ---------- */
+.story{
+  margin:0 0 14px;
+  font-size:clamp(14px,3.9vw,17px);font-weight:600;font-style:italic;
+  line-height:1.55;color:#6f8695;
+  text-wrap:balance;
 }
 
 /* ---------- Choices ---------- */
@@ -184,6 +207,37 @@ body{
   display:block;font-family:"Baloo 2","Trebuchet MS",system-ui,sans-serif;font-size:clamp(40px,12vw,60px);
   font-weight:800;color:var(--grass-dark);line-height:1.05;
 }
+
+/* ---------- The journey trail on the result screen ---------- */
+.journey-wrap{
+  margin:2px 0 4px;padding:14px 16px;
+  background:#f6faf3;border-radius:18px;
+}
+.journey-title{
+  margin:0 0 10px;font-size:12px;font-weight:800;letter-spacing:.1em;
+  text-transform:uppercase;color:#5f8f57;
+}
+.journey{
+  list-style:none;margin:0;padding:0 2px 0 0;
+  max-height:min(210px,26vh);overflow-y:auto;
+  display:flex;flex-direction:column;gap:6px;
+  text-align:left;
+}
+.journey-stop{
+  display:flex;align-items:baseline;gap:10px;
+  font-weight:700;font-size:15px;color:var(--ink);
+}
+.journey-stop::before{
+  content:"";flex:0 0 9px;height:9px;border-radius:50%;
+  background:var(--grass);align-self:center;
+}
+.journey-stop--detour::before{background:#f0b429}
+.journey-place{flex:1 1 auto}
+.journey-metres{
+  flex:0 0 auto;font-weight:800;color:var(--grass-dark);
+  font-variant-numeric:tabular-nums;
+}
+.journey-stop--detour .journey-metres{color:#b6821a}
 
 /* ---------- Feedback bubble (after answering) ---------- */
 .bubble{
