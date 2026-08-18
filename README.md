@@ -10,6 +10,11 @@ scrolling and the total distance keeps growing.
 Open **`paper-plane-park/index.html`** in any browser — double-click it, no server,
 no install, no internet needed.
 
+Want one file to send to a phone or tablet? Run `node paper-plane-park/build-standalone.js`
+to produce **`paper-plane-park/paper-plane-park.html`**, which has the CSS and
+JavaScript inlined — email it, AirDrop it, or drop it in a cloud folder, and it plays
+on its own.
+
 * Tap (or click) an answer, or press `1` `2` `3` `4`.
 * Watch the plane fly. The bigger the answer, the farther it goes.
 * Tap anywhere to keep flying.
@@ -68,6 +73,7 @@ distance all recalculate themselves.
 | `paper-plane-park/index.html` | The page and all the screens |
 | `paper-plane-park/styles.css` | Big, kid-friendly styling |
 | `paper-plane-park/game.js` | Questions, the canvas park, the flight, the game flow |
+| `paper-plane-park/build-standalone.js` | Bundles the three into one shareable HTML file |
 
 No dependencies, no build step. The only network request is for the Google Fonts
 stylesheet; if it can't load, the game falls back to system fonts and still works

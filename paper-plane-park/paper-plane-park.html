@@ -1,3 +1,300 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#5fb7e8">
+<title>Paper Plane Park</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+/* ---------- Paper Plane Park ---------- */
+:root{
+  --ink:#22384a;
+  --ink-soft:#5b7385;
+  --sun:#ffd45e;
+  --grass:#4ea23f;
+  --grass-dark:#2f7a34;
+  --sky:#5fb7e8;
+  --card:#ffffff;
+  --shadow:0 18px 40px rgba(18,58,44,.28);
+  --radius:26px;
+}
+
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{
+  margin:0;
+  font-family:"Nunito",system-ui,-apple-system,"Segoe UI",sans-serif;
+  color:var(--ink);
+  background:var(--sky);
+  overflow:hidden;
+  overscroll-behavior:none;
+  touch-action:manipulation;
+}
+
+#scene{position:fixed;inset:0;width:100%;height:100%;display:block}
+
+.hidden{display:none !important}
+
+/* ---------- HUD ---------- */
+.hud{
+  position:fixed;top:0;left:0;right:0;
+  display:flex;align-items:center;gap:10px;
+  padding:calc(10px + env(safe-area-inset-top)) 14px 10px;
+  z-index:5;pointer-events:none;
+}
+.hud-pill{
+  background:rgba(255,255,255,.9);
+  border-radius:999px;
+  padding:7px 16px;
+  box-shadow:0 6px 16px rgba(20,60,40,.2);
+  display:flex;flex-direction:column;line-height:1.1;
+}
+.hud-pill--wide{margin-left:auto}
+.hud-label{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-soft)}
+.hud-value{font-family:"Baloo 2","Trebuchet MS",system-ui,sans-serif;font-size:20px;font-weight:800;color:var(--ink)}
+.icon-btn{
+  pointer-events:auto;
+  width:44px;height:44px;border:none;border-radius:50%;
+  background:rgba(255,255,255,.9);
+  box-shadow:0 6px 16px rgba(20,60,40,.2);
+  font-size:20px;cursor:pointer;line-height:1;
+}
+.icon-btn:active{transform:scale(.94)}
+
+/* ---------- Runway of plane pips ---------- */
+.runway{
+  position:fixed;left:0;right:0;
+  top:calc(64px + env(safe-area-inset-top));
+  display:flex;justify-content:center;gap:7px;
+  z-index:5;pointer-events:none;
+}
+.pip{
+  width:13px;height:13px;border-radius:50%;
+  background:rgba(255,255,255,.55);
+  box-shadow:inset 0 0 0 2px rgba(255,255,255,.85);
+  transition:transform .3s ease, background .3s ease;
+}
+.pip.done{background:var(--sun);transform:scale(1.15)}
+.pip.current{background:#fff;transform:scale(1.35)}
+
+/* ---------- Live distance readout ---------- */
+.fly-meter{
+  position:fixed;left:50%;transform:translateX(-50%);
+  top:calc(104px + env(safe-area-inset-top));
+  text-align:center;z-index:4;pointer-events:none;
+}
+.fly-distance{
+  font-family:"Baloo 2","Trebuchet MS",system-ui,sans-serif;font-size:clamp(38px,10vw,64px);font-weight:800;
+  color:#fff;text-shadow:0 4px 0 rgba(24,80,60,.35), 0 10px 22px rgba(0,0,0,.2);
+  line-height:1;
+}
+
+/* ---------- Panels & cards ---------- */
+.panel{
+  position:fixed;inset:0;z-index:10;
+  display:flex;align-items:center;justify-content:center;
+  padding:16px;
+  background:radial-gradient(120% 80% at 50% 20%, rgba(10,40,30,.15), rgba(10,40,30,.4));
+  animation:fadeIn .3s ease both;
+}
+.panel.leaving{animation:fadeOut .28s ease both}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes fadeOut{from{opacity:1}to{opacity:0}}
+
+.card{
+  width:min(560px,100%);
+  max-height:calc(100dvh - 32px);
+  overflow-y:auto;
+  background:var(--card);
+  border-radius:var(--radius);
+  box-shadow:var(--shadow);
+  padding:26px 22px 24px;
+  text-align:center;
+  animation:pop .38s cubic-bezier(.2,1.3,.5,1) both;
+}
+@keyframes pop{from{transform:translateY(22px) scale(.94);opacity:0}to{transform:none;opacity:1}}
+
+.card h1{
+  font-family:"Baloo 2","Trebuchet MS",system-ui,sans-serif;font-size:clamp(32px,9vw,46px);font-weight:800;
+  margin:6px 0 8px;color:var(--grass-dark);line-height:1.05;
+}
+.card h2{
+  font-family:"Baloo 2","Trebuchet MS",system-ui,sans-serif;font-size:clamp(22px,5.6vw,30px);font-weight:800;
+  margin:2px 0 18px;line-height:1.22;color:var(--ink);
+}
+.subtitle{margin:0 0 18px;font-size:clamp(15px,4vw,18px);font-weight:600;color:var(--ink-soft);line-height:1.5}
+.plane-badge{font-size:56px;line-height:1;margin-bottom:2px;animation:bob 2.6s ease-in-out infinite}
+@keyframes bob{0%,100%{transform:translateY(0) rotate(-4deg)}50%{transform:translateY(-9px) rotate(4deg)}}
+
+.q-number{
+  display:inline-block;background:#eaf7e4;color:var(--grass-dark);
+  font-weight:800;font-size:13px;letter-spacing:.06em;text-transform:uppercase;
+  padding:6px 14px;border-radius:999px;margin-bottom:12px;
+}
+
+/* ---------- Choices ---------- */
+.choices{display:flex;flex-direction:column;gap:11px;text-align:left}
+.choice{
+  display:flex;align-items:center;gap:12px;
+  width:100%;padding:14px 16px;
+  border:3px solid #e4ecf1;border-radius:18px;
+  background:#f8fbfd;color:var(--ink);
+  font-family:inherit;font-size:clamp(15px,4.1vw,18px);font-weight:700;line-height:1.35;
+  cursor:pointer;text-align:left;
+  transition:transform .12s ease, border-color .18s ease, background .18s ease;
+}
+.choice:hover{border-color:#bfe0f5;background:#f2f9ff}
+.choice:active{transform:scale(.98)}
+.choice .key{
+  flex:0 0 34px;height:34px;border-radius:11px;
+  display:grid;place-items:center;
+  background:#dff0fb;color:#2a6a95;font-family:"Baloo 2","Trebuchet MS",system-ui,sans-serif;font-size:19px;font-weight:800;
+}
+.choice.picked{border-color:var(--grass);background:#eefae7}
+.choice.picked .key{background:var(--grass);color:#fff}
+.choice.dim{opacity:.42}
+.choice:disabled{cursor:default}
+
+.read-btn{
+  align-self:center;margin-top:4px;
+  border:none;background:none;cursor:pointer;
+  font-family:inherit;font-weight:800;font-size:15px;color:#7d94a3;
+  padding:8px 14px;border-radius:999px;
+}
+.read-btn:hover{background:#f1f6f9;color:#4b9c3c}
+
+/* ---------- Buttons ---------- */
+.btn{
+  font-family:"Baloo 2","Trebuchet MS",system-ui,sans-serif;font-weight:800;
+  border:none;border-radius:999px;cursor:pointer;
+  background:var(--grass);color:#fff;
+  box-shadow:0 6px 0 var(--grass-dark);
+  transition:transform .1s ease, box-shadow .1s ease;
+}
+.btn:active{transform:translateY(4px);box-shadow:0 2px 0 var(--grass-dark)}
+.btn--big{font-size:clamp(21px,5.5vw,26px);padding:15px 40px;margin-top:6px}
+
+.hint{margin:16px 0 0;font-size:13px;color:#9aacb8;font-weight:600}
+.hint kbd{
+  background:#eef3f6;border-radius:6px;padding:1px 6px;
+  font-family:inherit;font-weight:800;color:var(--ink-soft);
+}
+.best-line{margin:14px 0 4px;font-weight:700;color:var(--ink-soft)}
+.best-line strong{color:var(--grass-dark)}
+
+/* ---------- Result ---------- */
+.score-box{
+  background:linear-gradient(180deg,#eefae7,#dff3d4);
+  border-radius:20px;padding:14px 18px;margin:0 0 16px;
+}
+.score-label{display:block;font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#5f8f57}
+.score-value{
+  display:block;font-family:"Baloo 2","Trebuchet MS",system-ui,sans-serif;font-size:clamp(40px,12vw,60px);
+  font-weight:800;color:var(--grass-dark);line-height:1.05;
+}
+
+/* ---------- Feedback bubble (after answering) ---------- */
+.bubble{
+  position:fixed;left:50%;bottom:calc(26px + env(safe-area-inset-bottom));
+  transform:translate(-50%,20px);
+  width:min(520px,calc(100% - 28px));
+  background:rgba(255,255,255,.96);
+  border-radius:22px;padding:16px 20px;
+  box-shadow:var(--shadow);
+  text-align:center;z-index:8;
+  opacity:0;transition:opacity .32s ease, transform .32s ease;
+}
+.bubble.show{opacity:1;transform:translate(-50%,0)}
+.bubble .gain{
+  font-family:"Baloo 2","Trebuchet MS",system-ui,sans-serif;font-size:26px;font-weight:800;color:var(--grass-dark);
+  display:block;line-height:1.1;
+}
+.bubble .note{margin:4px 0 0;font-weight:700;font-size:clamp(14px,3.9vw,17px);color:var(--ink-soft);line-height:1.4}
+.bubble .tap{margin:10px 0 0;font-size:13px;font-weight:800;color:#a9bac5;letter-spacing:.03em}
+
+/* short / landscape screens: keep the readout out of the plane's flight path */
+@media (max-height:560px){
+  .fly-meter{top:auto;bottom:calc(14px + env(safe-area-inset-bottom))}
+  .fly-distance{font-size:clamp(30px,7vh,44px)}
+  .card{padding:18px 18px 16px}
+  .card h2{margin-bottom:12px}
+  .choices{gap:8px}
+  .choice{padding:10px 13px}
+}
+
+@media (prefers-reduced-motion:reduce){
+  *{animation-duration:.01ms !important;transition-duration:.01ms !important}
+}
+
+</style>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#9992;</text></svg>">
+</head>
+<body>
+
+<canvas id="scene"></canvas>
+
+<!-- ============ HUD ============ -->
+<header id="hud" class="hud hidden">
+  <div class="hud-pill">
+    <span class="hud-label">Flight</span>
+    <span id="hudQuestion" class="hud-value">1 / 8</span>
+  </div>
+  <div class="hud-pill hud-pill--wide">
+    <span class="hud-label">Total distance</span>
+    <span id="hudTotal" class="hud-value">0 m</span>
+  </div>
+  <button id="muteBtn" class="icon-btn" type="button" aria-label="Turn sound off" aria-pressed="true">
+    <span id="muteIcon">&#128266;</span>
+  </button>
+</header>
+
+<div id="runway" class="runway hidden" aria-hidden="true"></div>
+
+<!-- ============ LIVE DISTANCE ============ -->
+<div id="flyMeter" class="fly-meter hidden">
+  <div id="flyDistance" class="fly-distance">0 m</div>
+</div>
+
+<!-- ============ START SCREEN ============ -->
+<section id="startScreen" class="panel">
+  <div class="card card--start">
+    <div class="plane-badge">&#9992;&#65039;</div>
+    <h1>Paper Plane Park</h1>
+    <p class="subtitle">Answer questions about a brave school day.<br>Great thinking makes your plane fly&nbsp;farther!</p>
+    <button id="startBtn" class="btn btn--big" type="button">Let&rsquo;s Fly!</button>
+    <p id="bestLine" class="best-line hidden">Your best flight: <strong id="bestValue">0 m</strong></p>
+    <p class="hint">Tip: you can also press <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> <kbd>4</kbd> to pick an answer.</p>
+  </div>
+</section>
+
+<!-- ============ QUESTION SCREEN ============ -->
+<section id="questionScreen" class="panel hidden">
+  <div class="card card--question">
+    <div class="q-number"><span id="qCount">Question 1 of 8</span></div>
+    <h2 id="qText">Question</h2>
+    <div id="qChoices" class="choices"></div>
+  </div>
+</section>
+
+<!-- ============ RESULT SCREEN ============ -->
+<section id="resultScreen" class="panel hidden">
+  <div class="card card--result">
+    <div id="resultEmoji" class="plane-badge">&#127942;</div>
+    <h2 id="resultTitle">Amazing flying!</h2>
+    <div class="score-box">
+      <span class="score-label">Total distance</span>
+      <span id="finalDistance" class="score-value">0 m</span>
+    </div>
+    <p id="resultMessage" class="subtitle"></p>
+    <div id="resultBest" class="best-line"></div>
+    <button id="againBtn" class="btn btn--big" type="button">Fly Again</button>
+  </div>
+</section>
+
+<script>
 /* =========================================================
    Paper Plane Park
    Answer questions about a brave school day and fly farther.
@@ -1159,3 +1456,7 @@
   game.distM = 0;
   requestAnimationFrame(frame);
 })();
+
+</script>
+</body>
+</html>
