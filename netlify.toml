@@ -1,0 +1,12 @@
+# Netlify configuration for Paper Plane Park.
+# The game is plain static files, so there is no build step — just publish
+# the folder that holds index.html.
+
+[build]
+  publish = "paper-plane-park"
+
+# It is a family page, so keep it out of search results.
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"
