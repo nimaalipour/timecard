@@ -25,9 +25,12 @@ on its own.
   on that device.
 * The ending screen maps the whole journey — every place the plane landed and what it
   earned there.
-* **🔊 Read it to me** on each question reads the question and the choices out loud —
-  handy for a new reader.
-* The speaker button in the top right mutes the sounds.
+* Every stop is **read out loud automatically** — the story, the question and all the
+  choices, with each choice lighting up as it is spoken. The 🗣️ button turns
+  read-aloud off and on, and **🔊 Read it to me** on the card reads it again.
+* The park has sound: a launch whoosh, wind that follows the plane, a landing thump
+  and chime that climb with better answers, birdsong and a soft breeze. The speaker
+  button silences everything at once.
 
 ## The story
 

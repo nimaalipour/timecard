@@ -43,7 +43,7 @@ body{
   position:fixed;top:0;left:0;right:0;
   display:flex;align-items:center;gap:10px;
   padding:calc(10px + env(safe-area-inset-top)) 14px 10px;
-  z-index:5;pointer-events:none;
+  z-index:20;pointer-events:none;
 }
 .hud-pill{
   background:rgba(255,255,255,.9);
@@ -176,6 +176,8 @@ body{
   display:grid;place-items:center;
   background:#dff0fb;color:#2a6a95;font-family:"Baloo 2","Trebuchet MS",system-ui,sans-serif;font-size:19px;font-weight:800;
 }
+.choice.reading{border-color:#6db9e8;background:#e9f5ff}
+.choice.reading .key{background:#6db9e8;color:#fff}
 .choice.picked{border-color:var(--grass);background:#eefae7}
 .choice.picked .key{background:var(--grass);color:#fff}
 .choice.dim{opacity:.42}
@@ -300,6 +302,9 @@ body{
     <span class="hud-label">Total distance</span>
     <span id="hudTotal" class="hud-value">0 m</span>
   </div>
+  <button id="voiceBtn" class="icon-btn" type="button" aria-label="Turn read-aloud off" aria-pressed="true">
+    <span id="voiceIcon">&#128483;&#65039;</span>
+  </button>
   <button id="muteBtn" class="icon-btn" type="button" aria-label="Turn sound off" aria-pressed="true">
     <span id="muteIcon">&#128266;</span>
   </button>
@@ -667,17 +672,46 @@ body{
 
   var audio = {
     ctx: null,
+    master: null,          // one volume knob every sound goes through
+    amb: null,             // the park ambience bus (breeze + birdsong)
+    noiseBuf: null,        // two seconds of noise, reused by wind and rustles
+    wind: null,            // live wind nodes while the plane is flying
+    lastWind: 0,
+    started: false,
     on: store.get('ppp_sound', 'on') !== 'off',
+
     wake: function () {
       if (!this.ctx) {
         var AC = window.AudioContext || window.webkitAudioContext;
-        if (AC) this.ctx = new AC();
+        if (!AC) return;
+        this.ctx = new AC();
+        this.master = this.ctx.createGain();
+        this.master.gain.value = this.on ? 1 : 0.0001;
+        this.master.connect(this.ctx.destination);
+        this.amb = this.ctx.createGain();
+        this.amb.gain.value = 0.0001;
+        this.amb.connect(this.master);
+        var len = this.ctx.sampleRate * 2;
+        this.noiseBuf = this.ctx.createBuffer(1, len, this.ctx.sampleRate);
+        var data = this.noiseBuf.getChannelData(0);
+        for (var i = 0; i < len; i++) data[i] = Math.random() * 2 - 1;
       }
-      if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume();
+      if (this.ctx.state === 'suspended') this.ctx.resume();
+      if (!this.started && this.ctx) { this.started = true; this.startAmbience(); }
     },
-    tone: function (freq, dur, type, vol, slideTo) {
+
+    setOn: function (on) {
+      this.on = on;
+      if (this.ctx) {
+        var t = this.ctx.currentTime;
+        this.master.gain.cancelScheduledValues(t);
+        this.master.gain.setTargetAtTime(on ? 1 : 0.0001, t, 0.04);
+      }
+    },
+
+    tone: function (freq, dur, type, vol, slideTo, delay) {
       if (!this.on || !this.ctx) return;
-      var c = this.ctx, t = c.currentTime;
+      var c = this.ctx, t = c.currentTime + (delay || 0);
       var o = c.createOscillator(), g = c.createGain();
       o.type = type || 'sine';
       o.frequency.setValueAtTime(freq, t);
@@ -685,23 +719,129 @@ body{
       g.gain.setValueAtTime(0.0001, t);
       g.gain.exponentialRampToValueAtTime(vol || 0.15, t + 0.02);
       g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-      o.connect(g); g.connect(c.destination);
+      o.connect(g); g.connect(this.master);
       o.start(t); o.stop(t + dur + 0.05);
     },
-    pick:   function () { this.tone(520, 0.12, 'triangle', 0.12, 780); },
-    launch: function () { this.tone(240, 0.55, 'sawtooth', 0.05, 900); },
-    land:   function (quality) {
-      var base = 440 + quality * 220;
-      var self = this;
-      this.tone(base, 0.18, 'sine', 0.14);
-      setTimeout(function () { self.tone(base * 1.25, 0.22, 'sine', 0.12); }, 130);
-      if (quality > 0.8) setTimeout(function () { self.tone(base * 1.5, 0.3, 'sine', 0.1); }, 270);
+
+    noiseBurst: function (dur, filterType, f0, f1, vol, delay) {
+      if (!this.on || !this.ctx) return;
+      var c = this.ctx, t = c.currentTime + (delay || 0);
+      var src = c.createBufferSource(); src.buffer = this.noiseBuf; src.loop = true;
+      var f = c.createBiquadFilter(); f.type = filterType;
+      f.frequency.setValueAtTime(f0, t);
+      if (f1) f.frequency.exponentialRampToValueAtTime(f1, t + dur);
+      var g = c.createGain();
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(vol, t + dur * 0.25);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      src.connect(f); f.connect(g); g.connect(this.master);
+      src.start(t); src.stop(t + dur + 0.1);
     },
+
+    tap:  function () { this.tone(620, 0.07, 'triangle', 0.07, 420); },
+    pick: function () {
+      this.tone(520, 0.1, 'triangle', 0.11, 700);
+      this.tone(780, 0.14, 'triangle', 0.09, 990, 0.08);
+    },
+
+    launch: function () {
+      this.noiseBurst(0.7, 'bandpass', 300, 1600, 0.16);
+      this.tone(220, 0.5, 'sawtooth', 0.035, 760);
+    },
+
+    windStart: function () {
+      if (!this.ctx) return;
+      this.windStop();
+      var c = this.ctx;
+      var src = c.createBufferSource(); src.buffer = this.noiseBuf; src.loop = true;
+      var f = c.createBiquadFilter(); f.type = 'bandpass';
+      f.frequency.value = 500; f.Q.value = 0.8;
+      var g = c.createGain(); g.gain.value = 0.0001;
+      src.connect(f); f.connect(g); g.connect(this.master);
+      src.start();
+      this.wind = { src: src, filter: f, gain: g };
+    },
+    windSet: function (x) {        // 0..1, how fast the flight feels right now
+      if (!this.wind) return;
+      var t = this.ctx.currentTime;
+      this.wind.gain.gain.setTargetAtTime(0.0001 + 0.11 * x, t, 0.09);
+      this.wind.filter.frequency.setTargetAtTime(350 + 1500 * x, t, 0.12);
+    },
+    windStop: function () {
+      if (!this.wind) return;
+      var w = this.wind, t = this.ctx.currentTime;
+      w.gain.gain.setTargetAtTime(0.0001, t, 0.05);
+      w.src.stop(t + 0.4);
+      this.wind = null;
+    },
+
+    land: function (quality) {
+      this.tone(110, 0.16, 'sine', 0.2, 55);                       // the thump
+      this.noiseBurst(0.22, 'highpass', 1500, null, 0.05, 0.02);   // grass rustle
+      var base = 440 + quality * 220;                              // the chime climbs
+      this.tone(base, 0.18, 'sine', 0.12, null, 0.12);
+      this.tone(base * 1.25, 0.22, 'sine', 0.11, null, 0.25);
+      if (quality > 0.8) this.tone(base * 1.5, 0.3, 'sine', 0.1, null, 0.4);
+    },
+
+    sparkle: function () {
+      this.tone(1568, 0.14, 'sine', 0.07);
+      this.tone(2093, 0.14, 'sine', 0.06, null, 0.09);
+      this.tone(2637, 0.2, 'sine', 0.05, null, 0.18);
+    },
+
     fanfare: function () {
-      var self = this, notes = [523, 659, 784, 1047];
-      notes.forEach(function (n, i) {
-        setTimeout(function () { self.tone(n, 0.35, 'triangle', 0.13); }, i * 140);
-      });
+      var notes = [523, 659, 784, 1047];
+      for (var i = 0; i < notes.length; i++) {
+        this.tone(notes[i], 0.35, 'triangle', 0.12, null, i * 0.14);
+      }
+      this.tone(262, 1.1, 'triangle', 0.05);
+      this.tone(330, 1.1, 'triangle', 0.04);
+      this.tone(392, 1.1, 'triangle', 0.04);
+      this.sparkle();
+    },
+
+    startAmbience: function () {
+      var self = this, c = this.ctx;
+      // the softest breeze underneath everything
+      var src = c.createBufferSource(); src.buffer = this.noiseBuf; src.loop = true;
+      var f = c.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 400;
+      var g = c.createGain(); g.gain.value = 0.015;
+      src.connect(f); f.connect(g); g.connect(this.amb);
+      src.start();
+      this.amb.gain.setTargetAtTime(1, c.currentTime, 1.5);
+      (function nextChirp() {
+        setTimeout(function () {
+          if (self.on && self.ctx.state === 'running') self.chirp();
+          nextChirp();
+        }, 2600 + Math.random() * 5400);
+      })();
+    },
+
+    chirp: function () {
+      // a little bird somewhere off to one side
+      var c = this.ctx, t = c.currentTime;
+      var out = this.amb;
+      if (c.createStereoPanner) {
+        var pan = c.createStereoPanner();
+        pan.pan.value = Math.random() * 1.4 - 0.7;
+        pan.connect(this.amb);
+        out = pan;
+      }
+      var n = 2 + Math.floor(Math.random() * 3);
+      var f0 = 2100 + Math.random() * 1500;
+      for (var i = 0; i < n; i++) {
+        var st = t + i * (0.11 + Math.random() * 0.09);
+        var o = c.createOscillator(), g = c.createGain();
+        o.type = 'sine';
+        o.frequency.setValueAtTime(f0 + Math.random() * 320, st);
+        o.frequency.exponentialRampToValueAtTime(f0 * (1.12 + Math.random() * 0.22), st + 0.08);
+        g.gain.setValueAtTime(0.0001, st);
+        g.gain.exponentialRampToValueAtTime(0.045, st + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, st + 0.11);
+        o.connect(g); g.connect(out);
+        o.start(st); o.stop(st + 0.15);
+      }
     }
   };
 
@@ -1317,6 +1457,12 @@ body{
         game.rot += (Math.max(-0.9, Math.min(0.9, target)) - game.rot) * Math.min(1, dt * 9);
       }
 
+      if (audio.wind && game.time - audio.lastWind > 0.08) {
+        audio.lastWind = game.time;
+        var spd = Math.pow(1 - t, 0.9);              // fast at launch, easing off
+        audio.windSet((0.3 + 0.7 * spd) * Math.min(1, fl.gain / 45));
+      }
+
       liveDistance(Math.round(travelled), Math.round(game.planeM));
 
       if (t >= 1) {
@@ -1324,8 +1470,9 @@ body{
         game.planeM = game.distM;
         game.alt = 0;
         landPuff();
+        audio.windStop();
         audio.land(fl.quality);
-        if (fl.quality > 0.85) sparkleBurst();
+        if (fl.quality > 0.85) { sparkleBurst(); audio.sparkle(); }
         var done = fl.resolve;
         game.flight = null;
         done();
@@ -1408,21 +1555,95 @@ body{
     }
   }
 
-  /* ---------- read the question out loud ---------- */
+  /* ---------- read things out loud ---------- */
   var speech = {
-    ok: 'speechSynthesis' in window,
-    stop: function () { if (this.ok) window.speechSynthesis.cancel(); },
-    say: function (lines) {
+    ok: 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window,
+    auto: store.get('ppp_voice', 'on') !== 'off',
+    voice: null,
+    queue: [],       // spoken utterances stay referenced here — Chrome cuts off
+                     // any utterance the garbage collector reaches mid-queue
+    timer: null,
+    unlocked: false,
+    gen: 0,
+
+    findVoice: function () {
+      var vs = window.speechSynthesis.getVoices();
+      if (!vs.length) return;
+      var prefer = [/Google US English/i, /Samantha/i, /\bAria\b/i, /\bJenny\b/i,
+                    /Karen/i, /Google UK English Female/i, /Zira/i];
+      for (var p = 0; p < prefer.length; p++) {
+        for (var i = 0; i < vs.length; i++) {
+          if (prefer[p].test(vs[i].name) && /^en/i.test(vs[i].lang)) { this.voice = vs[i]; return; }
+        }
+      }
+      for (var j = 0; j < vs.length; j++) {
+        if (/^en/i.test(vs[j].lang)) { this.voice = vs[j]; return; }
+      }
+      this.voice = vs[0];
+    },
+
+    unlock: function () {
+      // iPhones and iPads only allow speech that a tap started — so the first
+      // tap "speaks" a silent space, and every later line is allowed through
+      if (!this.ok || this.unlocked) return;
+      this.unlocked = true;
+      var u = new SpeechSynthesisUtterance(' ');
+      u.volume = 0;
+      window.speechSynthesis.speak(u);
+    },
+
+    stop: function () {
       if (!this.ok) return;
+      this.gen++;
+      this.queue = [];
+      if (this.timer) { clearInterval(this.timer); this.timer = null; }
+      window.speechSynthesis.cancel();
+      var lit = document.querySelectorAll('.reading');
+      for (var i = 0; i < lit.length; i++) lit[i].classList.remove('reading');
+    },
+
+    // lines: strings, or { text, mark } to light an element up while it is spoken
+    say: function (lines) {
+      if (!this.ok || !lines.length) return;
+      var self = this;
       this.stop();
-      lines.forEach(function (line, i) {
-        var u = new SpeechSynthesisUtterance(line);
-        u.rate = 0.92; u.pitch = 1.1;
-        if (i) u.volume = 1;
-        window.speechSynthesis.speak(u);
-      });
+      var gen = this.gen;
+      // Chrome quietly swallows anything queued in the same tick as cancel()
+      setTimeout(function () {
+        if (gen !== self.gen) return;
+        window.speechSynthesis.resume();
+        for (var i = 0; i < lines.length; i++) {
+          (function (line) {
+            var u = new SpeechSynthesisUtterance(line.text || line);
+            if (self.voice) u.voice = self.voice;
+            u.rate = 0.95;
+            u.pitch = 1.05;
+            var mark = line.mark || null;
+            if (mark) u.onstart = function () { mark.classList.add('reading'); };
+            u.onend = u.onerror = function () {
+              if (mark) mark.classList.remove('reading');
+              var ix = self.queue.indexOf(u);
+              if (ix >= 0) self.queue.splice(ix, 1);
+            };
+            self.queue.push(u);
+            window.speechSynthesis.speak(u);
+          })(lines[i]);
+        }
+        // Chrome sometimes pauses itself mid-read — nudge it along
+        var ticks = 0;
+        self.timer = setInterval(function () {
+          ticks++;
+          if (window.speechSynthesis.speaking && ticks < 60) window.speechSynthesis.resume();
+          else if (!self.queue.length || ticks >= 60) { clearInterval(self.timer); self.timer = null; }
+        }, 3000);
+      }, 90);
     }
   };
+
+  if (speech.ok) {
+    speech.findVoice();
+    window.speechSynthesis.onvoiceschanged = function () { speech.findVoice(); };
+  }
 
   /* ---------------------------------------------------------
      5. UI
@@ -1452,7 +1673,9 @@ body{
     finalDistance: document.getElementById('finalDistance'),
     againBtn: document.getElementById('againBtn'),
     muteBtn: document.getElementById('muteBtn'),
-    muteIcon: document.getElementById('muteIcon')
+    muteIcon: document.getElementById('muteIcon'),
+    voiceBtn: document.getElementById('voiceBtn'),
+    voiceIcon: document.getElementById('voiceIcon')
   };
 
   function show(node) { node.classList.remove('hidden'); }
@@ -1488,6 +1711,7 @@ body{
     return new Promise(function (res) {
       function go(e) {
         if (e.type === 'keydown' && e.key !== 'Enter' && e.key !== ' ') return;
+        if (e.target && e.target.closest && e.target.closest('.icon-btn')) return;
         window.removeEventListener('pointerdown', go);
         window.removeEventListener('keydown', go);
         bubble.classList.remove('show');
@@ -1499,6 +1723,15 @@ body{
         window.addEventListener('keydown', go);
       }, 350);
     });
+  }
+
+  function sceneLines(q) {
+    var btns = el.qChoices.querySelectorAll('.choice');
+    var lines = [q.story, q.q];
+    q.choices.forEach(function (c, n) {
+      lines.push({ text: 'Number ' + (n + 1) + '. ' + c.t, mark: btns[n] });
+    });
+    return lines;
   }
 
   function askScene() {
@@ -1526,14 +1759,15 @@ body{
       read.className = 'read-btn';
       read.innerHTML = '<span aria-hidden="true">&#128266;</span> Read it to me';
       read.addEventListener('click', function () {
-        var lines = [q.story, q.q];
-        q.choices.forEach(function (c, n) { lines.push('Number ' + (n + 1) + '. ' + c.t); });
-        speech.say(lines);
+        audio.tap();
+        speech.unlock();
+        speech.say(sceneLines(q));
       });
       el.qChoices.appendChild(read);
     }
 
     show(el.question);
+    if (speech.auto && audio.on) speech.say(sceneLines(q));
     window.addEventListener('keydown', keyPick);
   }
 
@@ -1569,11 +1803,12 @@ body{
         show(el.placeTag);
         show(el.flyMeter);
         audio.launch();
+        audio.windStart();
         return fly(choice.m, quality);
       }).then(function () {
         hide(el.flyMeter);
         updateHud();
-        speech.say([choice.m + ' metres! ' + choice.f]);
+        if (speech.auto && audio.on) speech.say([choice.m + ' metres! ' + choice.f]);
         return showBubble(choice.m, choice.f);
       }).then(function () {
         answering = false;
@@ -1657,6 +1892,9 @@ body{
       : 'Your best flight so far: <strong>' + Math.max(best, total) + ' m</strong>';
     show(el.result);
     audio.fanfare();
+    if (speech.auto && audio.on) {
+      speech.say([m.title + ' ' + PILOT + ' flew ' + total + ' metres. ' + m.msg]);
+    }
     hide(el.placeTag);
   }
 
@@ -1679,21 +1917,40 @@ body{
   /* ---------- wiring ---------- */
   el.startBtn.addEventListener('click', function () {
     audio.wake();
+    speech.unlock();
+    audio.tap();
     hidePanel(el.start).then(startGame);
   });
 
   el.againBtn.addEventListener('click', function () {
     audio.wake();
+    speech.unlock();
+    audio.tap();
     hidePanel(el.result).then(startGame);
   });
 
   el.muteBtn.addEventListener('click', function () {
-    audio.on = !audio.on;
+    audio.wake();
+    audio.setOn(!audio.on);
     store.set('ppp_sound', audio.on ? 'on' : 'off');
     el.muteIcon.innerHTML = audio.on ? '&#128266;' : '&#128263;';
     el.muteBtn.setAttribute('aria-pressed', String(audio.on));
     el.muteBtn.setAttribute('aria-label', audio.on ? 'Turn sound off' : 'Turn sound on');
-    if (audio.on) { audio.wake(); audio.pick(); }
+    if (audio.on) audio.pick();
+    else speech.stop();
+  });
+
+  el.voiceBtn.addEventListener('click', function () {
+    audio.wake();
+    speech.unlock();
+    audio.tap();
+    speech.auto = !speech.auto;
+    store.set('ppp_voice', speech.auto ? 'on' : 'off');
+    el.voiceIcon.innerHTML = speech.auto ? '&#128483;&#65039;' : '&#129296;';
+    el.voiceBtn.setAttribute('aria-pressed', String(speech.auto));
+    el.voiceBtn.setAttribute('aria-label', speech.auto ? 'Turn read-aloud off' : 'Turn read-aloud on');
+    if (!speech.auto) speech.stop();
+    else if (!el.question.classList.contains('hidden')) speech.say(sceneLines(SCENES[game.sceneId]));
   });
 
   /* ---------- boot ---------- */
@@ -1703,6 +1960,14 @@ body{
     el.bestLine.classList.remove('hidden');
   }
   el.muteIcon.innerHTML = audio.on ? '&#128266;' : '&#128263;';
+  el.voiceIcon.innerHTML = speech.auto ? '&#128483;&#65039;' : '&#129296;';
+  el.voiceBtn.setAttribute('aria-pressed', String(speech.auto));
+  if (!speech.ok) hide(el.voiceBtn);
+
+  // phones suspend audio when the app goes to the background — any tap wakes it
+  document.addEventListener('pointerdown', function () {
+    if (audio.ctx && audio.ctx.state === 'suspended') audio.ctx.resume();
+  });
 
   resize();
   buildWorld();
