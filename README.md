@@ -25,9 +25,11 @@ on its own.
   on that device.
 * The ending screen maps the whole journey — every place the plane landed and what it
   earned there.
-* Every stop is **read out loud automatically** — the story, the question and all the
-  choices, with each choice lighting up as it is spoken. The 🗣️ button turns
-  read-aloud off and on, and **🔊 Read it to me** on the card reads it again.
+* Every stop is **read out loud automatically** by a warm recorded voice — the story,
+  the question and all the choices, with each choice lighting up as it is spoken. The
+  🗣️ button turns read-aloud off and on, and **🔊 Read it to me** on the card reads it
+  again. Every line ships as a pre-recorded neural-voice clip (13.9 minutes of audio in
+  `paper-plane-park/voice/`); the device's built-in voice is only the offline fallback.
 * The park has sound: a launch whoosh, wind that follows the plane, a landing thump
   and chime that climb with better answers, birdsong and a soft breeze. The speaker
   button silences everything at once.
@@ -113,8 +115,13 @@ the size of the park keep up on their own.
 | `paper-plane-park/index.html` | The page and all the screens |
 | `paper-plane-park/styles.css` | Big, kid-friendly styling |
 | `paper-plane-park/game.js` | Questions, the canvas park, the flight, the game flow |
-| `paper-plane-park/build-standalone.js` | Bundles the three into one shareable HTML file |
+| `paper-plane-park/build-standalone.js` | Bundles everything (voice clips included) into one shareable HTML file |
+| `paper-plane-park/make-voicepack.js` | Re-records the narrator (needs `pip install edge-tts`); run after editing any text |
+| `paper-plane-park/voice/` + `voicepack.js` | The recorded lines and the text→clip map |
 
-No dependencies, no build step. The only network request is for the Google Fonts
-stylesheet; if it can't load, the game falls back to system fonts and still works
-completely offline.
+No dependencies, no build step. The game loads its voice clips and the Google Fonts
+stylesheet from its own folder/CDN; offline it falls back to system fonts and the
+device's built-in voice, and still plays completely.
+
+After editing any question or story text, run `node paper-plane-park/make-voicepack.js`
+to record the new lines (unchanged lines are skipped), then redeploy.

@@ -308,6 +308,22 @@
     on: store.get('ppp_sound', 'on') !== 'off',
 
     wake: function () {
+      // ask iPhones to treat the page as a game, not background sound —
+      // otherwise the ringer/silent switch mutes every clip and effect
+      if (navigator.audioSession) {
+        try { navigator.audioSession.type = 'playback'; } catch (e) {}
+      }
+      if (!this.unmuteEl) {
+        // and for older iPhones: a looping silent <audio> promotes the
+        // audio session the same way (the classic "unmute" trick)
+        var a = document.createElement('audio');
+        a.setAttribute('playsinline', '');
+        a.loop = true;
+        a.src = 'data:audio/wav;base64,UklGRkQDAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YSADAACAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgA==';
+        var played = a.play();
+        if (played && played.catch) played.catch(function () {});
+        this.unmuteEl = a;
+      }
       if (!this.ctx) {
         var AC = window.AudioContext || window.webkitAudioContext;
         if (!AC) return;
@@ -323,7 +339,10 @@
         var data = this.noiseBuf.getChannelData(0);
         for (var i = 0; i < len; i++) data[i] = Math.random() * 2 - 1;
       }
-      if (this.ctx.state === 'suspended') this.ctx.resume();
+      if (this.ctx.state !== 'running') {
+        var r = this.ctx.resume();          // iOS also reports 'interrupted'
+        if (r && r.catch) r.catch(function () {});
+      }
       if (!this.started && this.ctx) { this.started = true; this.startAmbience(); }
     },
 
@@ -426,6 +445,11 @@
       this.tone(330, 1.1, 'triangle', 0.04);
       this.tone(392, 1.1, 'triangle', 0.04);
       this.sparkle();
+    },
+
+    duck: function (down) {
+      if (!this.ctx) return;
+      this.amb.gain.setTargetAtTime(down ? 0.15 : 1, this.ctx.currentTime, 0.25);
     },
 
     startAmbience: function () {
@@ -1182,37 +1206,102 @@
     }
   }
 
-  /* ---------- read things out loud ---------- */
+  /* ---------- read things out loud ----------
+     Every line has a recorded clip (voicepack.js, made by make-voicepack.js)
+     spoken by a warm neural voice. Clips play through WebAudio; the device's
+     built-in voice is only the fallback when a clip is missing or offline. */
   var speech = {
-    ok: 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window,
+    tts: 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window,
+    pack: window.VOICE_PACK || {},
     auto: store.get('ppp_voice', 'on') !== 'off',
     voice: null,
     queue: [],       // spoken utterances stay referenced here — Chrome cuts off
                      // any utterance the garbage collector reaches mid-queue
+    buffers: {},     // clip url -> AudioBuffer promise
+    out: null,       // clip gain — straight to the speakers, NOT the master
+                     // knob, so "Read it to me" still answers while muted
+    current: null,   // the clip source playing right now
     timer: null,
     unlocked: false,
     gen: 0,
 
+    hasClips: function () {
+      for (var k in this.pack) return true;
+      return false;
+    },
+
+    ensureOut: function () {
+      if (!this.out && audio.ctx) {
+        this.out = audio.ctx.createGain();
+        this.out.gain.value = 1;
+        this.out.connect(audio.ctx.destination);
+      }
+      return this.out;
+    },
+
+    fetchClip: function (url) {
+      // the cache holds raw MP3 bytes (~5 MB for the whole game) and decodes
+      // per play — caching decoded PCM instead would hold ~30x that and can
+      // crash an older phone's tab
+      if (!this.buffers[url]) {
+        if (url.lastIndexOf('data:', 0) === 0) {
+          var bin = atob(url.slice(url.indexOf(',') + 1));
+          var arr = new Uint8Array(bin.length);
+          for (var i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+          this.buffers[url] = Promise.resolve(arr.buffer);
+        } else {
+          this.buffers[url] = fetch(url).then(function (r) {
+            if (!r.ok) throw new Error('clip ' + r.status);
+            return r.arrayBuffer();
+          });
+          var self = this;
+          this.buffers[url].catch(function () { delete self.buffers[url]; });
+        }
+      }
+      return this.buffers[url].then(function (ab) {
+        return new Promise(function (res, rej) {
+          // slice() because decodeAudioData detaches the buffer it is given
+          audio.ctx.decodeAudioData(ab.slice(0), res, rej);
+        });
+      });
+    },
+
+    preload: function (lines) {
+      if (!audio.ctx || !this.auto) return;
+      for (var i = 0; i < lines.length; i++) {
+        var url = this.pack[lines[i].text || lines[i]];
+        if (url) this.fetchClip(url).catch(function () {});
+      }
+    },
+
     findVoice: function () {
       var vs = window.speechSynthesis.getVoices();
       if (!vs.length) return;
-      var prefer = [/Google US English/i, /Samantha/i, /\bAria\b/i, /\bJenny\b/i,
-                    /Karen/i, /Google UK English Female/i, /Zira/i];
-      for (var p = 0; p < prefer.length; p++) {
-        for (var i = 0; i < vs.length; i++) {
-          if (prefer[p].test(vs[i].name) && /^en/i.test(vs[i].lang)) { this.voice = vs[i]; return; }
-        }
+      function scoreOf(v) {
+        var n = v.name, sc = 0;
+        if (/natural|neural/i.test(n)) sc += 100;   // Edge's online voices
+        if (/premium|enhanced/i.test(n)) sc += 80;  // Apple's better voices
+        if (/siri/i.test(n)) sc += 60;
+        if (/google/i.test(n)) sc += 40;
+        if (/samantha|aria|jenny|karen|zira|susan|ava|allison/i.test(n)) sc += 30;
+        if (/^en[-_]us/i.test(v.lang)) sc += 12;
+        else if (/^en/i.test(v.lang)) sc += 8;
+        else sc -= 100;
+        if (v.default) sc += 5;
+        return sc;
       }
-      for (var j = 0; j < vs.length; j++) {
-        if (/^en/i.test(vs[j].lang)) { this.voice = vs[j]; return; }
+      var best = vs[0], bestScore = -1e9;
+      for (var i = 0; i < vs.length; i++) {
+        var sc = scoreOf(vs[i]);
+        if (sc > bestScore) { bestScore = sc; best = vs[i]; }
       }
-      this.voice = vs[0];
+      this.voice = best;
     },
 
     unlock: function () {
       // iPhones and iPads only allow speech that a tap started — so the first
       // tap "speaks" a silent space, and every later line is allowed through
-      if (!this.ok || this.unlocked) return;
+      if (!this.tts || this.unlocked) return;
       this.unlocked = true;
       var u = new SpeechSynthesisUtterance(' ');
       u.volume = 0;
@@ -1220,54 +1309,122 @@
     },
 
     stop: function () {
-      if (!this.ok) return;
       this.gen++;
       this.queue = [];
       if (this.timer) { clearInterval(this.timer); this.timer = null; }
-      window.speechSynthesis.cancel();
+      if (this.current) {
+        try { this.current.onended = null; this.current.stop(); } catch (e) {}
+        this.current = null;
+      }
+      if (this.tts) window.speechSynthesis.cancel();
+      audio.duck(false);
       var lit = document.querySelectorAll('.reading');
       for (var i = 0; i < lit.length; i++) lit[i].classList.remove('reading');
     },
 
+    playClip: function (url, mark, gen) {
+      var self = this;
+      return this.fetchClip(url).then(function (buf) {
+        return new Promise(function (res) {
+          if (gen !== self.gen) return res();
+          var src = audio.ctx.createBufferSource();
+          src.buffer = buf;
+          src.connect(self.ensureOut());
+          self.current = src;
+          if (mark) mark.classList.add('reading');
+          var finish = function () {
+            if (mark) mark.classList.remove('reading');
+            if (self.current === src) self.current = null;
+          };
+          // onended freezes if the context suspends mid-clip (backgrounded
+          // phone) — give every clip a deadline so the chain cannot wedge
+          var watchdog = setTimeout(function () {
+            if (gen !== self.gen) return;
+            try { src.onended = null; src.stop(); } catch (e) {}
+            finish();
+            res();
+          }, buf.duration * 1000 + 1500);
+          src.onended = function () {
+            clearTimeout(watchdog);
+            finish();
+            setTimeout(res, 140);            // a small breath between lines
+          };
+          src.start();
+        });
+      });
+    },
+
+    speakLine: function (text, mark, gen) {
+      var self = this;
+      if (!this.tts) return Promise.resolve();
+      return new Promise(function (res) {
+        if (gen !== self.gen) return res();
+        var u = new SpeechSynthesisUtterance(text);
+        if (self.voice) u.voice = self.voice;
+        u.rate = 0.95;
+        u.pitch = 1.05;
+        if (mark) u.onstart = function () { mark.classList.add('reading'); };
+        u.onend = u.onerror = function () {
+          if (mark) mark.classList.remove('reading');
+          var ix = self.queue.indexOf(u);
+          if (ix >= 0) self.queue.splice(ix, 1);
+          res();
+        };
+        self.queue.push(u);
+        window.speechSynthesis.speak(u);
+        if (!self.timer) {
+          // Chrome sometimes pauses its engine mid-read — nudge it along
+          var ticks = 0;
+          self.timer = setInterval(function () {
+            ticks++;
+            if (window.speechSynthesis.speaking && ticks < 60) window.speechSynthesis.resume();
+            else { clearInterval(self.timer); self.timer = null; }
+          }, 3000);
+        }
+      });
+    },
+
     // lines: strings, or { text, mark } to light an element up while it is spoken
     say: function (lines) {
-      if (!this.ok || !lines.length) return;
+      if (!lines.length) return;
       var self = this;
       this.stop();
       var gen = this.gen;
-      // Chrome quietly swallows anything queued in the same tick as cancel()
-      setTimeout(function () {
-        if (gen !== self.gen) return;
-        window.speechSynthesis.resume();
-        for (var i = 0; i < lines.length; i++) {
-          (function (line) {
-            var u = new SpeechSynthesisUtterance(line.text || line);
-            if (self.voice) u.voice = self.voice;
-            u.rate = 0.95;
-            u.pitch = 1.05;
-            var mark = line.mark || null;
-            if (mark) u.onstart = function () { mark.classList.add('reading'); };
-            u.onend = u.onerror = function () {
-              if (mark) mark.classList.remove('reading');
-              var ix = self.queue.indexOf(u);
-              if (ix >= 0) self.queue.splice(ix, 1);
-            };
-            self.queue.push(u);
-            window.speechSynthesis.speak(u);
-          })(lines[i]);
-        }
-        // Chrome sometimes pauses itself mid-read — nudge it along
-        var ticks = 0;
-        self.timer = setInterval(function () {
-          ticks++;
-          if (window.speechSynthesis.speaking && ticks < 60) window.speechSynthesis.resume();
-          else if (!self.queue.length || ticks >= 60) { clearInterval(self.timer); self.timer = null; }
-        }, 3000);
-      }, 90);
+      var log = window.__pppVoiceLog = window.__pppVoiceLog || [];
+      var clips = 0;
+      for (var i = 0; i < lines.length; i++) {
+        var t = lines[i].text || lines[i];
+        if (this.pack[t] && audio.ctx) clips++;
+        else log.push({ miss: t });
+      }
+      log.push({ say: lines.length, clips: clips });
+      audio.duck(true);
+      // Chrome swallows an utterance queued in the same tick as cancel()
+      var chain = new Promise(function (res) { setTimeout(res, 90); });
+      lines.forEach(function (line) {
+        chain = chain.then(function () {
+          if (gen !== self.gen) return;
+          var text = line.text || line;
+          var mark = line.mark || null;
+          var url = self.pack[text];
+          if (url && audio.ctx) {
+            log.push({ clip: url });
+            return self.playClip(url, mark, gen).catch(function () {
+              return self.speakLine(text, mark, gen);
+            });
+          }
+          return self.speakLine(text, mark, gen);
+        });
+      });
+      chain.then(function () {
+        if (gen === self.gen) audio.duck(false);
+      });
     }
   };
+  // read-aloud works if there are clips to play or a device voice to fall back on
+  speech.ok = speech.hasClips() || speech.tts;
 
-  if (speech.ok) {
+  if (speech.tts) {
     speech.findVoice();
     window.speechSynthesis.onvoiceschanged = function () { speech.findVoice(); };
   }
@@ -1394,6 +1551,7 @@
     }
 
     show(el.question);
+    speech.preload(sceneLines(q));
     if (speech.auto && audio.on) speech.say(sceneLines(q));
     window.addEventListener('keydown', keyPick);
   }
@@ -1423,6 +1581,7 @@
       buttons[b].classList.add(b === i ? 'picked' : 'dim');
     }
 
+    speech.preload([choice.m + ' metres! ' + choice.f]);
     setTimeout(function () {
       hidePanel(el.question).then(function () {
         el.placeTag.textContent = '\u2192 ' + (choice.next ? SCENES[choice.next].place
@@ -1519,9 +1678,7 @@
       : 'Your best flight so far: <strong>' + Math.max(best, total) + ' m</strong>';
     show(el.result);
     audio.fanfare();
-    if (speech.auto && audio.on) {
-      speech.say([m.title + ' ' + PILOT + ' flew ' + total + ' metres. ' + m.msg]);
-    }
+    if (speech.auto && audio.on) speech.say([m.title, m.msg]);
     hide(el.placeTag);
   }
 
@@ -1591,9 +1748,17 @@
   el.voiceBtn.setAttribute('aria-pressed', String(speech.auto));
   if (!speech.ok) hide(el.voiceBtn);
 
-  // phones suspend audio when the app goes to the background — any tap wakes it
-  document.addEventListener('pointerdown', function () {
-    if (audio.ctx && audio.ctx.state === 'suspended') audio.ctx.resume();
+  // phones suspend audio when the app goes to the background — any tap or
+  // return to the app wakes it ('interrupted' is iOS for suspended)
+  function nudgeAudio() {
+    if (audio.ctx && audio.ctx.state !== 'running') {
+      var r = audio.ctx.resume();
+      if (r && r.catch) r.catch(function () {});
+    }
+  }
+  document.addEventListener('pointerdown', nudgeAudio);
+  document.addEventListener('visibilitychange', function () {
+    if (!document.hidden) nudgeAudio();
   });
 
   resize();

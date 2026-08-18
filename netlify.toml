@@ -10,3 +10,9 @@
   for = "/*"
   [headers.values]
     X-Robots-Tag = "noindex, nofollow"
+
+# Voice clips are content-hashed — cache them for a year.
+[[headers]]
+  for = "/voice/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
