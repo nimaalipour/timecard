@@ -15,6 +15,15 @@
   var PILOT = 'Grayson';
   var START = 'lawn';
 
+  // the how-to card shown after the title screen; the narrator reads these
+  var HOW_LINES = [
+    'Hello, pilot ' + PILOT + '! Here is how to fly.',
+    'At every stop, listen to the question, then tap your answer.',
+    'Braver, kinder answers give your plane a bigger push — so the best answer flies the farthest!',
+    'If a throw felt wrong, you have three do-overs to fly it again.'
+  ];
+  var HOW_ICONS = ['\uD83D\uDC4B', '\u2753', '\uD83D\uDCA8', '\uD83D\uDD04'];
+
   var SCENES = {
 
     lawn: {
@@ -1471,6 +1480,9 @@
     flyDistance: document.getElementById('flyDistance'),
     start: document.getElementById('startScreen'),
     startBtn: document.getElementById('startBtn'),
+    how: document.getElementById('howScreen'),
+    howList: document.getElementById('howList'),
+    gotItBtn: document.getElementById('gotItBtn'),
     bestLine: document.getElementById('bestLine'),
     bestValue: document.getElementById('bestValue'),
     question: document.getElementById('questionScreen'),
@@ -1552,6 +1564,22 @@
         window.addEventListener('keydown', go);
       }, 350);
     });
+  }
+
+  function showHow() {
+    el.howList.innerHTML = '';
+    var lines = [];
+    HOW_LINES.forEach(function (text, i) {
+      var row = document.createElement('div');
+      row.className = 'how-row';
+      row.innerHTML = '<span class="how-ico">' + HOW_ICONS[i] + '</span><span class="how-txt"></span>';
+      row.querySelector('.how-txt').textContent = text;
+      el.howList.appendChild(row);
+      lines.push({ text: text, mark: row });
+    });
+    show(el.how);
+    speech.preload(lines);
+    if (speech.auto && audio.on) speech.say(lines);
   }
 
   function sceneLines(q) {
@@ -1768,7 +1796,14 @@
     audio.wake();
     speech.unlock();
     audio.tap();
-    hidePanel(el.start).then(startGame);
+    hidePanel(el.start).then(showHow);
+  });
+
+  el.gotItBtn.addEventListener('click', function () {
+    audio.wake();
+    audio.tap();
+    speech.stop();
+    hidePanel(el.how).then(startGame);
   });
 
   el.againBtn.addEventListener('click', function () {

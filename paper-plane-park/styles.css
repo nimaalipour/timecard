@@ -119,6 +119,18 @@ body{
   padding:6px 14px;border-radius:999px;margin-bottom:12px;
 }
 
+/* ---------- How-to-fly card ---------- */
+.how-list{display:flex;flex-direction:column;gap:11px;text-align:left;margin:4px 0 18px}
+.how-row{
+  display:flex;gap:12px;align-items:flex-start;
+  padding:12px 14px;border-radius:16px;
+  background:#f6faf3;border:3px solid transparent;
+  font-weight:700;font-size:clamp(15px,4vw,17px);line-height:1.45;color:var(--ink);
+  transition:border-color .18s ease, background .18s ease;
+}
+.how-row .how-ico{font-size:24px;line-height:1.2;flex:0 0 auto}
+.how-row.reading{border-color:#6db9e8;background:#e9f5ff}
+
 /* ---------- Dedication plaque ---------- */
 .plaque{
   margin:2px 0 20px;padding:15px 16px 14px;

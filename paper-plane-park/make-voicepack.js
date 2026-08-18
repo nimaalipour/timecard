@@ -38,6 +38,11 @@ for (const id of Object.keys(SCENES)) {
     texts.add(c.m + " metres! " + c.f);
   });
 }
+// the how-to-fly card, extracted from game.js like SCENES
+const howStart = src.indexOf('var HOW_LINES = [') + 'var HOW_LINES = '.length;
+const howLiteral = src.slice(howStart, src.indexOf('];', howStart) + 1);
+new Function('PILOT', 'return ' + howLiteral)(pilot).forEach(t => texts.add(t));
+
 // the endings — run game.js's own medal() so wording can never drift
 const medalSrc = src.match(/function medal\(total, detours\) \{[\s\S]*?\n  \}/)[0];
 const medal = new Function('MAX_M', 'PILOT', 'return (' + medalSrc + ')')(1, pilot);

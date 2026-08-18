@@ -17,6 +17,9 @@ to produce **`paper-plane-park/paper-plane-park.html`**, which has the CSS and
 JavaScript inlined — email it, AirDrop it, or drop it in a cloud folder, and it plays
 on its own.
 
+* A short **How to Fly** card opens the game — the narrator tells the pilot that
+  braver, kinder answers push the plane farther, and that there are three do-overs.
+  It appears from the title screen; "Fly Again" jumps straight back into the park.
 * Tap (or click) an answer, or press `1` `2` `3` `4`.
 * Watch the plane fly. The bigger the answer, the farther it goes.
 * After each landing, the reply doesn't just score the answer — on questions with a
