@@ -1,0 +1,1149 @@
+/* =========================================================
+   Paper Plane Park
+   Answer questions about a brave school day and fly farther.
+   ========================================================= */
+(function () {
+  'use strict';
+
+  /* ---------------------------------------------------------
+     1. THE QUESTIONS
+     Every answer flies. Kind, honest, brave answers fly farthest,
+     and no answer is ever called "wrong".
+     --------------------------------------------------------- */
+  var QUESTIONS = [
+    {
+      q: 'What are you most excited about this year?',
+      choices: [
+        { t: 'Learning new things — I want to read bigger books!', m: 50,
+          f: 'Being excited to learn gives your plane a huge push!' },
+        { t: 'Seeing my friends and playing at recess!', m: 40,
+          f: 'Friends make school feel warm. Nice lift!' },
+        { t: 'Snack time. Only snack time.', m: 25,
+          f: 'Snacks are great! See if you can find one more thing too.' },
+        { t: "Nothing. I don't want to talk about it.", m: 15,
+          f: 'That is okay. Naming one small good thing helps your plane climb.' }
+      ]
+    },
+    {
+      q: 'What are you nervous about?',
+      choices: [
+        { t: 'I tell Mom or Dad the worry out loud.', m: 50,
+          f: 'Saying a worry out loud makes it smaller. Big lift!' },
+        { t: 'I draw or write what is bugging me.', m: 40,
+          f: 'Getting the worry outside your head really works.' },
+        { t: 'I try hard not to think about it.', m: 25,
+          f: 'Worries get quieter when we share them, not when we hide them.' },
+        { t: 'I say "I\'m fine" even when I am not.', m: 15,
+          f: 'You are allowed to say the true thing. People want to help.' }
+      ]
+    },
+    {
+      q: 'What will you do if someone is unkind to you?',
+      choices: [
+        { t: '"I don\'t like when you talk to me that way. Please stop."', m: 50,
+          f: 'Strong, calm words. Practising them makes them easy to find!' },
+        { t: 'Walk away and tell my teacher.', m: 45,
+          f: 'Getting a grown-up is a brave choice, not a tattle.' },
+        { t: 'Say nothing and feel bad all day.', m: 20,
+          f: 'Your feelings matter. Telling someone lightens the load.' },
+        { t: 'Say something mean right back.', m: 15,
+          f: 'Mean words bounce back and forth. Yours can stop the bounce.' }
+      ]
+    },
+    {
+      q: 'What if you see someone sitting alone?',
+      choices: [
+        { t: 'Ask them, "Do you want to play with me?"', m: 50,
+          f: 'Kids who imagine reaching out become the kids who do. Soar!' },
+        { t: 'Sit next to them and say hello.', m: 45,
+          f: 'Just sitting close can make someone\'s whole day.' },
+        { t: 'Smile and wave from far away.', m: 30,
+          f: 'A good start! An invitation would fly even farther.' },
+        { t: 'Keep playing with my own friends.', m: 20,
+          f: 'Your friends are lucky. There is room for one more, too.' }
+      ]
+    },
+    {
+      q: "What if you don't understand something in class?",
+      choices: [
+        { t: 'Raise my hand and ask the teacher.', m: 50,
+          f: 'Asking questions is what smart pilots do!' },
+        { t: 'Ask a friend quietly after the lesson.', m: 40,
+          f: 'Good plan. Teachers love the question too.' },
+        { t: 'Try it once more on my own first.', m: 35,
+          f: 'Nice grit! And help is always allowed.' },
+        { t: 'Pretend I understand it.', m: 15,
+          f: 'Nobody knows everything yet. Asking is how the "yet" disappears.' }
+      ]
+    },
+    {
+      q: 'What if you make a mistake?',
+      choices: [
+        { t: '"Mistakes are how my brain grows." Then try again.', m: 50,
+          f: 'Kids who normalise mistakes grow. Rocket lift!' },
+        { t: 'Tell someone and ask for help fixing it.', m: 45,
+          f: 'Owning it takes real courage.' },
+        { t: 'Feel embarrassed and stop trying.', m: 20,
+          f: 'Everyone feels that. It fades faster when you try again.' },
+        { t: 'Hide it so nobody finds out.', m: 15,
+          f: 'Hidden mistakes get heavy. Shared ones get fixed.' }
+      ]
+    },
+    {
+      q: 'What if you start to feel really frustrated?',
+      choices: [
+        { t: 'Take three slow belly breaths.', m: 50,
+          f: 'Slow breaths tell your body it is safe. Whoosh!' },
+        { t: 'Take a short break, then try again.', m: 45,
+          f: 'Brains solve things better after a little rest.' },
+        { t: 'Ask someone to do it for me.', m: 25,
+          f: 'Help is great — try "show me how" instead of "do it for me".' },
+        { t: 'Yell and give up.', m: 15,
+          f: 'Big feelings are okay. Big breaths come first.' }
+      ]
+    },
+    {
+      q: 'What is one kind thing you can do tomorrow?',
+      choices: [
+        { t: 'Say good morning to someone new.', m: 50,
+          f: 'One hello can start a whole friendship!' },
+        { t: 'Share my snack or help clean up.', m: 45,
+          f: 'Helping hands make the day lighter for everyone.' },
+        { t: 'Cheer for someone who is trying hard.', m: 45,
+          f: 'Your cheering can be the thing that keeps them going.' },
+        { t: 'I will wait and see if I feel like it.', m: 20,
+          f: 'Kindness is a choice you get to make on purpose.' }
+      ]
+    }
+  ];
+
+  var MAX_M = QUESTIONS.reduce(function (s, q) {
+    return s + Math.max.apply(null, q.choices.map(function (c) { return c.m; }));
+  }, 0);
+
+  /* ---------------------------------------------------------
+     2. LITTLE SOUND BOX
+     --------------------------------------------------------- */
+  var audio = {
+    ctx: null,
+    on: localStorage.getItem('ppp_sound') !== 'off',
+    wake: function () {
+      if (!this.ctx) {
+        var AC = window.AudioContext || window.webkitAudioContext;
+        if (AC) this.ctx = new AC();
+      }
+      if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume();
+    },
+    tone: function (freq, dur, type, vol, slideTo) {
+      if (!this.on || !this.ctx) return;
+      var c = this.ctx, t = c.currentTime;
+      var o = c.createOscillator(), g = c.createGain();
+      o.type = type || 'sine';
+      o.frequency.setValueAtTime(freq, t);
+      if (slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, t + dur);
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(vol || 0.15, t + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      o.connect(g); g.connect(c.destination);
+      o.start(t); o.stop(t + dur + 0.05);
+    },
+    pick:   function () { this.tone(520, 0.12, 'triangle', 0.12, 780); },
+    launch: function () { this.tone(240, 0.55, 'sawtooth', 0.05, 900); },
+    land:   function (quality) {
+      var base = 440 + quality * 220;
+      var self = this;
+      this.tone(base, 0.18, 'sine', 0.14);
+      setTimeout(function () { self.tone(base * 1.25, 0.22, 'sine', 0.12); }, 130);
+      if (quality > 0.8) setTimeout(function () { self.tone(base * 1.5, 0.3, 'sine', 0.1); }, 270);
+    },
+    fanfare: function () {
+      var self = this, notes = [523, 659, 784, 1047];
+      notes.forEach(function (n, i) {
+        setTimeout(function () { self.tone(n, 0.35, 'triangle', 0.13); }, i * 140);
+      });
+    }
+  };
+
+  /* ---------------------------------------------------------
+     3. THE PARK  (canvas world)
+     --------------------------------------------------------- */
+  var cv = document.getElementById('scene');
+  var ctx = cv.getContext('2d');
+  var W = 0, H = 0;
+  var horizonY = 0;   // where the sky meets the grass
+  var laneY = 0;      // the ground line the plane flies along
+  var band = 0;       // height of the grassy area
+  var S = 1;          // scenery scale, follows screen size
+
+  var PPM = 14;                            // pixels per metre
+  var WORLD_M = MAX_M + 60;                // a little park beyond the record
+  var WORLD_W = WORLD_M * PPM;
+  var CAM_MIN = -70;                       // keeps the plane off the left edge
+
+  function rng(seed) {
+    return function () {
+      seed |= 0; seed = seed + 0x6D2B79F5 | 0;
+      var t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+      t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+      return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    };
+  }
+
+  var clouds = [], birds = [], kites = [], balloons = [],
+      rowFar = [], rowMain = [], rowNear = [], meadow = [], butterflies = [];
+
+  function buildWorld() {
+    var r = rng(20260818);
+    var span = WORLD_W + 2600;
+    clouds = []; birds = []; kites = []; balloons = [];
+    rowFar = []; rowMain = []; rowNear = []; meadow = []; butterflies = [];
+
+    for (var x = -300; x < span * 0.35; x += 190 + r() * 240) {
+      clouds.push({ x: x, y: 18 + r() * 205, s: 0.5 + r() * 0.95, drift: 3 + r() * 5 });
+    }
+    for (var b = -100; b < span * 0.4; b += 620 + r() * 900) {
+      birds.push({ x: b, y: 50 + r() * 120, s: 0.7 + r() * 0.6, ph: r() * 6.28 });
+    }
+    for (var k = 500; k < span * 0.75; k += 1300 + r() * 1500) {
+      kites.push({ x: k, y: 70 + r() * 110, s: 0.8 + r() * 0.5, hue: Math.floor(r() * 360), ph: r() * 6.28 });
+    }
+    for (var bl = 900; bl < span * 0.9; bl += 2200 + r() * 2200) {
+      balloons.push({ x: bl, ph: r() * 6.28, hue: Math.floor(r() * 360) });
+    }
+    // far row: hedges and small trees just under the horizon
+    for (var f = -300; f < span * 0.85; f += 70 + r() * 90) {
+      var fr = r();
+      rowFar.push({ x: f, s: 0.55 + r() * 0.3, k: r(),
+        type: fr < 0.55 ? 'tree' : fr < 0.85 ? 'bush' : 'hedge' });
+    }
+    // main row: the lane the plane flies down
+    for (var n = -300; n < span; n += 105 + r() * 130) {
+      var roll = r();
+      var type = roll < 0.30 ? 'tree' : roll < 0.48 ? 'bush' : roll < 0.72 ? 'flowers' :
+                 roll < 0.80 ? 'bench' : roll < 0.87 ? 'lamp' :
+                 roll < 0.93 ? 'pond' : 'picnic';
+      rowMain.push({ x: n, s: 0.8 + r() * 0.5, k: r(), type: type, hue: Math.floor(r() * 360) });
+    }
+    // near row: big soft shapes along the bottom
+    for (var q = -400; q < span * 1.3; q += 260 + r() * 320) {
+      rowNear.push({ x: q, s: 1 + r() * 0.6, k: r(),
+        type: r() < 0.55 ? 'bush' : 'tree', hue: Math.floor(r() * 360) });
+    }
+    // meadow: grass tufts and little flowers carpeting the foreground
+    for (var g = -400; g < span * 1.35; g += 5 + r() * 9) {
+      meadow.push({ x: g, s: 0.7 + r() * 0.8, k: r(),
+        flower: r() < 0.22, hue: Math.floor(r() * 360) });
+    }
+    for (var bf = 300; bf < span * 1.2; bf += 700 + r() * 900) {
+      butterflies.push({ x: bf, y: r(), ph: r() * 6.28, hue: Math.floor(r() * 360) });
+    }
+  }
+
+  function resize() {
+    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    W = cv.clientWidth; H = cv.clientHeight;
+    cv.width = Math.round(W * dpr);
+    cv.height = Math.round(H * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    horizonY = Math.round(H * (H > W ? 0.55 : 0.62));
+    band = H - horizonY;
+    laneY = Math.round(horizonY + band * 0.42);
+    S = Math.max(0.72, Math.min(1.4, H / 780));
+  }
+  window.addEventListener('resize', resize);
+
+  /* ---------- drawing helpers ---------- */
+  function circle(x, y, r2) { ctx.beginPath(); ctx.arc(x, y, r2, 0, 6.2832); ctx.fill(); }
+
+  // older browsers do not have roundRect
+  if (!ctx.roundRect) {
+    CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, r2) {
+      this.moveTo(x + r2, y);
+      this.arcTo(x + w, y, x + w, y + h, r2);
+      this.arcTo(x + w, y + h, x, y + h, r2);
+      this.arcTo(x, y + h, x, y, r2);
+      this.arcTo(x, y, x + w, y, r2);
+      this.closePath();
+      return this;
+    };
+  }
+
+  function wrap(x, w) { return ((x % w) + w) % w - 300; }
+
+  function drawSky() {
+    var g = ctx.createLinearGradient(0, 0, 0, horizonY);
+    g.addColorStop(0, '#59b6e9');
+    g.addColorStop(0.5, '#93d6f2');
+    g.addColorStop(1, '#dcf3fb');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, W, horizonY + 2);
+  }
+
+  function drawSun(cam) {
+    var x = W - 92 - cam * 0.02, y = 78;
+    var g = ctx.createRadialGradient(x, y, 6, x, y, 130);
+    g.addColorStop(0, 'rgba(255,244,180,.95)');
+    g.addColorStop(0.32, 'rgba(255,232,150,.32)');
+    g.addColorStop(1, 'rgba(255,232,150,0)');
+    ctx.fillStyle = g; circle(x, y, 130);
+    ctx.fillStyle = '#fff6bd'; circle(x, y, 32);
+  }
+
+  function drawClouds(cam, time) {
+    var span = WORLD_W + 2600;
+    for (var i = 0; i < clouds.length; i++) {
+      var c = clouds[i];
+      var x = wrap(c.x - cam * 0.12 + time * c.drift, span);
+      if (x < -340 || x > W + 340) continue;
+      var s = c.s;
+      ctx.fillStyle = 'rgba(255,255,255,.95)';
+      circle(x, c.y, 26 * s);
+      circle(x + 32 * s, c.y - 14 * s, 34 * s);
+      circle(x + 68 * s, c.y + 2 * s, 24 * s);
+      ctx.fillRect(x - 2, c.y - 1, 72 * s, 22 * s);
+      ctx.fillStyle = 'rgba(214,238,250,.9)';
+      ctx.fillRect(x - 2, c.y + 14 * s, 72 * s, 7 * s);
+    }
+  }
+
+  function drawBirds(cam, time) {
+    var span = WORLD_W + 2600;
+    ctx.strokeStyle = 'rgba(58,92,116,.45)';
+    ctx.lineWidth = 2; ctx.lineCap = 'round';
+    for (var i = 0; i < birds.length; i++) {
+      var b = birds[i];
+      var x = wrap(b.x - cam * 0.18 + time * 11, span);
+      if (x < -40 || x > W + 40) continue;
+      var flap = Math.sin(time * 5 + b.ph) * 4;
+      var y = b.y + Math.sin(time * 0.8 + b.ph) * 8, s = b.s * 7;
+      ctx.beginPath();
+      ctx.moveTo(x - s, y + flap); ctx.quadraticCurveTo(x, y - 3, x + s, y + flap);
+      ctx.stroke();
+    }
+  }
+
+  function drawKites(cam, time) {
+    for (var i = 0; i < kites.length; i++) {
+      var k = kites[i], x = k.x - cam * 0.45;
+      if (x < -90 || x > W + 90) continue;
+      var sway = Math.sin(time * 0.9 + k.ph) * 14;
+      var y = k.y + Math.sin(time * 1.3 + k.ph) * 8, s = 16 * k.s;
+      ctx.save();
+      ctx.translate(x + sway, y);
+      ctx.rotate(Math.sin(time + k.ph) * 0.18);
+      ctx.strokeStyle = 'rgba(255,255,255,.6)'; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(0, s);
+      ctx.quadraticCurveTo(-10, s + 34, 6, s + 66); ctx.stroke();
+      ctx.fillStyle = 'hsl(' + k.hue + ',85%,62%)';
+      ctx.beginPath(); ctx.moveTo(0, -s); ctx.lineTo(s * 0.7, 0); ctx.lineTo(0, s); ctx.lineTo(-s * 0.7, 0);
+      ctx.closePath(); ctx.fill();
+      ctx.fillStyle = 'rgba(255,255,255,.45)';
+      ctx.beginPath(); ctx.moveTo(0, -s); ctx.lineTo(s * 0.7, 0); ctx.lineTo(0, 0); ctx.closePath(); ctx.fill();
+      ctx.restore();
+    }
+  }
+
+  function drawBalloons(cam, time) {
+    for (var i = 0; i < balloons.length; i++) {
+      var b = balloons[i], x = b.x - cam * 0.9;
+      if (x < -60 || x > W + 60) continue;
+      var y = laneY - 90 * S + Math.sin(time * 0.8 + b.ph) * 10;
+      ctx.strokeStyle = 'rgba(90,110,120,.5)'; ctx.lineWidth = 1;
+      for (var j = 0; j < 3; j++) {
+        var bx = x + (j - 1) * 13 * S, by = y - (j % 2) * 12 * S;
+        ctx.beginPath(); ctx.moveTo(bx, by + 10 * S);
+        ctx.quadraticCurveTo(x, laneY - 20 * S, x, laneY); ctx.stroke();
+        ctx.fillStyle = 'hsl(' + ((b.hue + j * 70) % 360) + ',85%,64%)';
+        ctx.beginPath(); ctx.ellipse(bx, by, 8 * S, 10 * S, 0, 0, 6.2832); ctx.fill();
+        ctx.fillStyle = 'rgba(255,255,255,.45)'; circle(bx - 2.5 * S, by - 3 * S, 2.4 * S);
+      }
+    }
+  }
+
+  function hills(cam, p, baseY, amp, wave, color) {
+    var off = cam * p;
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(-10, H);
+    for (var x = -10; x <= W + 10; x += 10) {
+      var wx = x + off;
+      var y = baseY + Math.sin(wx / wave) * amp + Math.sin(wx / (wave * 0.41)) * amp * 0.35;
+      ctx.lineTo(x, y);
+    }
+    ctx.lineTo(W + 10, H); ctx.closePath(); ctx.fill();
+  }
+
+  function drawHills(cam) {
+    hills(cam, 0.16, horizonY - 74 * S, 26 * S, 300, '#bfe6b3');
+    hills(cam, 0.26, horizonY - 40 * S, 20 * S, 210, '#9bd894');
+    hills(cam, 0.38, horizonY - 12 * S, 14 * S, 150, '#7cc873');
+  }
+
+  function drawGrass() {
+    var g = ctx.createLinearGradient(0, horizonY - 6, 0, H);
+    g.addColorStop(0, '#69bd57');
+    g.addColorStop(0.35, '#7ac95e');
+    g.addColorStop(0.75, '#5faf47');
+    g.addColorStop(1, '#4b9c3c');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, horizonY - 6, W, H - horizonY + 6);
+  }
+
+  function drawStripes(cam) {
+    ctx.save();
+    ctx.beginPath(); ctx.rect(0, horizonY - 6, W, H - horizonY + 6); ctx.clip();
+    ctx.fillStyle = 'rgba(255,255,255,.032)';
+    var wide = 120 * S;
+    var start = -((cam * 0.85) % (wide * 2)) - wide * 2;
+    for (var x = start; x < W + wide * 2; x += wide * 2) {
+      ctx.beginPath();
+      ctx.moveTo(x, H); ctx.lineTo(x + wide * 0.55, horizonY - 6);
+      ctx.lineTo(x + wide * 1.15, horizonY - 6); ctx.lineTo(x + wide, H);
+      ctx.closePath(); ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  function drawTreeLine(cam) {
+    var off = cam * 0.44, y = horizonY + 3;
+    ctx.fillStyle = '#6bbc68';
+    for (var x = -((off * 0.5) % 46) - 46; x < W + 46; x += 46) {
+      circle(x, y - 12 * S, 15 * S);
+      circle(x + 23, y - 6 * S, 11 * S);
+    }
+    ctx.fillRect(0, y - 6, W, 14);
+  }
+
+  function drawPath(cam) {
+    var top = laneY + 14 * S, thick = 26 * S;
+    ctx.fillStyle = '#efdfb6';
+    ctx.beginPath();
+    ctx.moveTo(-10, top + Math.sin((-10 + cam) / 320) * 10 * S);
+    for (var x = -10; x <= W + 10; x += 12) {
+      ctx.lineTo(x, top + Math.sin((x + cam) / 320) * 10 * S);
+    }
+    for (var x2 = W + 10; x2 >= -10; x2 -= 12) {
+      ctx.lineTo(x2, top + thick + Math.sin((x2 + cam) / 320) * 10 * S);
+    }
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,.35)';
+    ctx.beginPath();
+    ctx.moveTo(-10, top + Math.sin((-10 + cam) / 320) * 10 * S);
+    for (var x3 = -10; x3 <= W + 10; x3 += 12) {
+      ctx.lineTo(x3, top + Math.sin((x3 + cam) / 320) * 10 * S);
+    }
+    for (var x4 = W + 10; x4 >= -10; x4 -= 12) {
+      ctx.lineTo(x4, top + 4 * S + Math.sin((x4 + cam) / 320) * 10 * S);
+    }
+    ctx.closePath(); ctx.fill();
+  }
+
+  /* ---------- park furniture ---------- */
+  function tree(x, y, s, k, dark, mid, light) {
+    ctx.fillStyle = 'rgba(30,70,30,.14)';
+    ctx.beginPath(); ctx.ellipse(x, y + 2, 26 * s, 6 * s, 0, 0, 6.2832); ctx.fill();
+    ctx.fillStyle = '#8d5f3d';
+    ctx.fillRect(x - 4 * s, y - 32 * s, 8 * s, 33 * s);
+    ctx.fillStyle = dark;  circle(x - 18 * s, y - 42 * s, 17 * s);
+    ctx.fillStyle = mid;   circle(x + 17 * s, y - 40 * s, 16 * s);
+    ctx.fillStyle = mid;   circle(x, y - 58 * s, 22 * s);
+    ctx.fillStyle = light; circle(x - 5 * s + k * 8, y - 65 * s, 12 * s);
+  }
+
+  function bush(x, y, s, dark, mid, light) {
+    ctx.fillStyle = 'rgba(30,70,30,.12)';
+    ctx.beginPath(); ctx.ellipse(x, y + 2, 20 * s, 5 * s, 0, 0, 6.2832); ctx.fill();
+    ctx.fillStyle = dark;  circle(x - 12 * s, y - 8 * s, 11 * s);
+    ctx.fillStyle = mid;   circle(x + 11 * s, y - 7 * s, 10 * s);
+    ctx.fillStyle = mid;   circle(x, y - 14 * s, 15 * s);
+    ctx.fillStyle = light; circle(x - 4 * s, y - 19 * s, 7 * s);
+  }
+
+  function hedge(x, y, s) {
+    s *= 1.5;
+    ctx.fillStyle = 'rgba(30,70,30,.10)';
+    ctx.beginPath(); ctx.ellipse(x, y + 1, 30 * s, 5 * s, 0, 0, 6.2832); ctx.fill();
+    ctx.fillStyle = '#4e9f4d';
+    ctx.beginPath(); ctx.roundRect(x - 28 * s, y - 26 * s, 56 * s, 26 * s, 9 * s); ctx.fill();
+    ctx.fillStyle = '#63b65f';
+    ctx.beginPath(); ctx.roundRect(x - 26 * s, y - 26 * s, 52 * s, 11 * s, 6 * s); ctx.fill();
+  }
+
+  function bench(x, y, s) {
+    ctx.fillStyle = 'rgba(30,70,30,.12)';
+    ctx.beginPath(); ctx.ellipse(x, y + 1, 24 * s, 5 * s, 0, 0, 6.2832); ctx.fill();
+    ctx.fillStyle = '#a06b41';
+    ctx.fillRect(x - 22 * s, y - 15 * s, 44 * s, 5 * s);
+    ctx.fillRect(x - 22 * s, y - 26 * s, 44 * s, 4 * s);
+    ctx.fillRect(x - 22 * s, y - 20 * s, 44 * s, 4 * s);
+    ctx.fillStyle = '#7a4f2f';
+    ctx.fillRect(x - 18 * s, y - 15 * s, 4 * s, 15 * s);
+    ctx.fillRect(x + 14 * s, y - 15 * s, 4 * s, 15 * s);
+  }
+
+  function lamp(x, y, s) {
+    ctx.fillStyle = '#46596c';
+    ctx.fillRect(x - 2.5 * s, y - 54 * s, 5 * s, 54 * s);
+    ctx.fillStyle = '#ffe9a8';
+    ctx.beginPath();
+    ctx.moveTo(x - 9 * s, y - 54 * s); ctx.lineTo(x + 9 * s, y - 54 * s);
+    ctx.lineTo(x + 5 * s, y - 68 * s); ctx.lineTo(x - 5 * s, y - 68 * s);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#46596c';
+    ctx.beginPath(); ctx.ellipse(x, y, 7 * s, 3 * s, 0, 0, 6.2832); ctx.fill();
+  }
+
+  function pond(x, y, s, time) {
+    ctx.fillStyle = '#9ad0e8';
+    ctx.beginPath(); ctx.ellipse(x, y - 2 * s, 62 * s, 17 * s, 0, 0, 6.2832); ctx.fill();
+    ctx.fillStyle = '#5cc0e6';
+    ctx.beginPath(); ctx.ellipse(x, y - 3 * s, 57 * s, 14 * s, 0, 0, 6.2832); ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,.6)'; ctx.lineWidth = 2;
+    for (var i = 0; i < 2; i++) {
+      var w = 12 * s + ((time * 14 + i * 22) % 34) * s;
+      ctx.globalAlpha = Math.max(0, 1 - w / (46 * s));
+      ctx.beginPath(); ctx.ellipse(x - 10 * s, y - 3 * s, w, w * 0.26, 0, 0, 6.2832); ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = '#3f9d55';
+    ctx.beginPath(); ctx.ellipse(x + 26 * s, y + 1 * s, 10 * s, 4 * s, 0, 0, 6.2832); ctx.fill();
+    ctx.fillStyle = '#ff8fbe'; circle(x + 26 * s, y - 3 * s, 3.4 * s);
+    // a duck
+    ctx.fillStyle = '#fff';
+    ctx.beginPath(); ctx.ellipse(x - 24 * s, y - 6 * s, 8 * s, 5 * s, 0, 0, 6.2832); ctx.fill();
+    circle(x - 30 * s, y - 12 * s, 4.2 * s);
+    ctx.fillStyle = '#f7a83c';
+    ctx.beginPath(); ctx.moveTo(x - 34 * s, y - 12 * s); ctx.lineTo(x - 39 * s, y - 10.5 * s);
+    ctx.lineTo(x - 34 * s, y - 9 * s); ctx.closePath(); ctx.fill();
+  }
+
+  function flowers(x, y, s, hue) {
+    for (var i = 0; i < 6; i++) {
+      var fx = x + (i - 2.5) * 9 * s, fy = y - (6 + (i % 3) * 6) * s;
+      ctx.strokeStyle = '#3f8f38'; ctx.lineWidth = 1.7 * s;
+      ctx.beginPath(); ctx.moveTo(fx, y); ctx.lineTo(fx, fy); ctx.stroke();
+      ctx.fillStyle = 'hsl(' + ((hue + i * 45) % 360) + ',88%,68%)';
+      for (var pth = 0; pth < 4; pth++) {
+        circle(fx + Math.cos(pth * 1.57) * 3 * s, fy + Math.sin(pth * 1.57) * 3 * s, 2.4 * s);
+      }
+      ctx.fillStyle = '#fff5b8'; circle(fx, fy, 1.9 * s);
+    }
+  }
+
+  function picnic(x, y, s) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.fillStyle = '#f26d6d';
+    ctx.beginPath(); ctx.ellipse(0, -2 * s, 30 * s, 11 * s, 0, 0, 6.2832); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,.75)';
+    for (var i = -2; i <= 2; i++) ctx.fillRect(i * 11 * s - 1.5 * s, -13 * s, 3 * s, 22 * s);
+    ctx.fillStyle = '#c98a4b';
+    ctx.beginPath(); ctx.roundRect(6 * s, -18 * s, 18 * s, 12 * s, 3 * s); ctx.fill();
+    ctx.strokeStyle = '#c98a4b'; ctx.lineWidth = 2 * s;
+    ctx.beginPath(); ctx.arc(15 * s, -18 * s, 7 * s, Math.PI, 0); ctx.stroke();
+    ctx.restore();
+  }
+
+  function marker(x, y, metres) {
+    ctx.fillStyle = '#c9b58c'; ctx.fillRect(x - 2, y - 30 * S, 4, 30 * S);
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath(); ctx.roundRect(x - 22, y - 50 * S, 44, 21, 7); ctx.fill();
+    ctx.fillStyle = '#4b9c3c';
+    ctx.font = '700 13px Nunito, system-ui, sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(metres + 'm', x, y - 50 * S + 11);
+  }
+
+  function drawRowFar(cam) {
+    var off = cam * 0.55, y = horizonY + band * 0.13;
+    for (var i = 0; i < rowFar.length; i++) {
+      var it = rowFar[i], x = it.x - off;
+      if (x < -80 || x > W + 80) continue;
+      var s = it.s * S * 0.72;
+      if (it.type === 'tree') tree(x, y, s, it.k, '#3d8b47', '#4b9e51', '#63b566');
+      else if (it.type === 'bush') bush(x, y, s, '#4b9e51', '#57aa58', '#6cbc6b');
+      else hedge(x, y, s);
+    }
+  }
+
+  function drawRowMain(cam, time) {
+    var y = laneY;
+    for (var i = 0; i < rowMain.length; i++) {
+      var it = rowMain[i], x = it.x - cam;
+      if (x < -150 || x > W + 150) continue;
+      var s = it.s * S;
+      switch (it.type) {
+        case 'tree':    tree(x, y, s, it.k, '#2f7f3d', '#3d9346', '#57ad5b'); break;
+        case 'bush':    bush(x, y, s, '#38904a', '#45a24f', '#5ab660'); break;
+        case 'flowers': flowers(x, y, s, it.hue); break;
+        case 'bench':   bench(x, y, s); break;
+        case 'lamp':    lamp(x, y, s); break;
+        case 'pond':    pond(x, y, s, time); break;
+        case 'picnic':  picnic(x, y, s); break;
+      }
+    }
+    // distance signs every 25 m
+    var first = Math.max(0, Math.floor(cam / (25 * PPM)) * 25);
+    for (var m = first; m <= first + (W / PPM) + 50; m += 25) {
+      if (m === 0) continue;
+      var mx = m * PPM - cam;
+      if (mx < -40 || mx > W + 40) continue;
+      marker(mx, y + 4, m);
+    }
+  }
+
+  function drawRowNear(cam) {
+    var off = cam * 1.2, y = H + 22 * S;
+    for (var i = 0; i < rowNear.length; i++) {
+      var it = rowNear[i], x = it.x - off;
+      if (x < -220 || x > W + 220) continue;
+      var s = it.s * S * 1.7;
+      if (it.type === 'tree') {
+        ctx.fillStyle = '#2c7738'; circle(x - 24 * s * 0.5, y - 60 * s * 0.5, 26 * s * 0.5);
+        ctx.fillStyle = '#35873f'; circle(x + 22 * s * 0.5, y - 54 * s * 0.5, 24 * s * 0.5);
+        ctx.fillStyle = '#3f9647'; circle(x, y - 80 * s * 0.5, 32 * s * 0.5);
+      } else {
+        bush(x, y, s * 0.8, '#2c7738', '#35873f', '#43a04b');
+      }
+    }
+  }
+
+  function drawMeadow(cam) {
+    var off = cam * 1.12;
+    for (var i = 0; i < meadow.length; i++) {
+      var t = meadow[i], x = t.x - off;
+      if (x < -20 || x > W + 20) continue;
+      var y = laneY + 48 * S + t.k * (band * 0.52);
+      if (y > H + 10) continue;
+      var depth = (y - laneY) / band;              // closer to camera = bigger
+      var s = t.s * S * (0.7 + depth * 1.1);
+      ctx.strokeStyle = depth > 0.55 ? '#3d8c34' : '#4aa03d';
+      ctx.lineWidth = 2.4 * s; ctx.lineCap = 'round';
+      var h = 13 * s;
+      ctx.beginPath();
+      ctx.moveTo(x, y); ctx.quadraticCurveTo(x - 3 * s, y - h * 0.6, x - 6 * s, y - h);
+      ctx.moveTo(x, y); ctx.quadraticCurveTo(x + 2 * s, y - h * 0.7, x + 5 * s, y - h * 1.05);
+      ctx.moveTo(x, y); ctx.lineTo(x, y - h * 0.8);
+      ctx.stroke();
+      if (t.flower) {
+        ctx.fillStyle = 'hsl(' + t.hue + ',90%,72%)';
+        circle(x + 4 * s, y - h * 1.15, 3 * s);
+        ctx.fillStyle = '#fff6c0'; circle(x + 4 * s, y - h * 1.15, 1.2 * s);
+      }
+    }
+  }
+
+  function drawFringe(cam) {
+    var off = cam * 1.32, h = 30 * S, base = H + 4;
+    ctx.fillStyle = '#3f8f38';
+    ctx.beginPath();
+    ctx.moveTo(-10, H + 12);
+    for (var x = -10; x <= W + 10; x += 9) {
+      var wx = x + off;
+      ctx.lineTo(x, base - h * (0.55 + 0.45 * Math.abs(Math.sin(wx * 0.09) * Math.cos(wx * 0.031))));
+    }
+    ctx.lineTo(W + 10, H + 12); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = '#4aa03d'; ctx.lineWidth = 3 * S; ctx.lineCap = 'round';
+    for (var b = -10; b <= W + 10; b += 13) {
+      var wb = b + off, bh = h * (0.9 + 0.7 * Math.abs(Math.sin(wb * 0.05)));
+      ctx.beginPath();
+      ctx.moveTo(b, base);
+      ctx.quadraticCurveTo(b + 3 * S, base - bh * 0.6, b + 8 * S * Math.sin(wb * 0.02), base - bh);
+      ctx.stroke();
+    }
+  }
+
+  function drawButterflies(cam, time) {
+    for (var i = 0; i < butterflies.length; i++) {
+      var b = butterflies[i], x = b.x - cam * 1.05 + Math.sin(time * 0.7 + b.ph) * 40;
+      if (x < -30 || x > W + 30) continue;
+      var y = laneY + 30 * S + b.y * band * 0.4 + Math.sin(time * 2 + b.ph) * 16;
+      var flap = Math.abs(Math.sin(time * 9 + b.ph));
+      ctx.fillStyle = 'hsl(' + b.hue + ',90%,66%)';
+      ctx.beginPath(); ctx.ellipse(x - 4 * S, y, (4.5 * flap + 1.5) * S, 5 * S, -0.4, 0, 6.2832); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(x + 4 * S, y, (4.5 * flap + 1.5) * S, 5 * S, 0.4, 0, 6.2832); ctx.fill();
+      ctx.fillStyle = 'rgba(60,50,40,.6)';
+      ctx.fillRect(x - 0.8 * S, y - 4 * S, 1.6 * S, 8 * S);
+    }
+  }
+
+  /* ---------- the plane ---------- */
+  function drawPlane(x, y, rot, s) {
+    ctx.save();
+    ctx.translate(x, y); ctx.rotate(rot); ctx.scale(s, s);
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath(); ctx.moveTo(23, 0); ctx.lineTo(-23, -14); ctx.lineTo(-13, 1); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#d3e6f6';
+    ctx.beginPath(); ctx.moveTo(23, 0); ctx.lineTo(-13, 1); ctx.lineTo(-23, 13); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = '#9fbdd4'; ctx.lineWidth = 1.2;
+    ctx.beginPath(); ctx.moveTo(23, 0); ctx.lineTo(-13, 1); ctx.stroke();
+    ctx.fillStyle = '#ff8fb1';
+    ctx.beginPath(); ctx.moveTo(-13, 1); ctx.lineTo(-23, -14); ctx.lineTo(-19, -3); ctx.closePath(); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawPlaneShadow(x, alt) {
+    var f = Math.max(0, 1 - alt / (band * 1.4));
+    if (f <= 0.02) return;
+    ctx.fillStyle = 'rgba(30,70,30,' + (0.22 * f) + ')';
+    ctx.beginPath();
+    ctx.ellipse(x, laneY + 2, 22 * f + 8, 5 * f + 2, 0, 0, 6.2832);
+    ctx.fill();
+  }
+
+  var trail = [], puffs = [], sparkles = [];
+
+  function drawTrail() {
+    if (trail.length < 2) return;
+    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    for (var i = 1; i < trail.length; i++) {
+      var a = trail[i - 1], b = trail[i];
+      ctx.strokeStyle = 'rgba(255,255,255,' + (b.life * 0.5) + ')';
+      ctx.lineWidth = 1 + b.life * 5;
+      ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+    }
+  }
+
+  function drawPuffs() {
+    for (var i = 0; i < puffs.length; i++) {
+      var p = puffs[i];
+      ctx.fillStyle = 'rgba(' + p.c + ',' + p.life * 0.8 + ')';
+      circle(p.x, p.y, p.r * (1.4 - p.life * 0.4));
+    }
+  }
+
+  function drawSparkles(time) {
+    for (var i = 0; i < sparkles.length; i++) {
+      var s = sparkles[i];
+      ctx.save();
+      ctx.translate(s.x, s.y);
+      ctx.rotate(time * 3 + i);
+      ctx.fillStyle = 'rgba(255,238,140,' + s.life + ')';
+      ctx.fillRect(-1.2, -5, 2.4, 10); ctx.fillRect(-5, -1.2, 10, 2.4);
+      ctx.restore();
+    }
+  }
+
+  /* ---------------------------------------------------------
+     4. GAME STATE + LOOP
+     --------------------------------------------------------- */
+  var game = {
+    index: 0,
+    distM: 0,        // where the plane is parked, in metres
+    planeM: 0,       // live plane position while flying
+    alt: 0,          // height above the lane, px
+    rot: -0.12,
+    flight: null,
+    cam: CAM_MIN,
+    camTarget: CAM_MIN,
+    time: 0
+  };
+
+  function planeScreenX() { return game.planeM * PPM - game.cam; }
+  function planeScreenY() { return laneY - 12 - game.alt; }
+
+  function camFor(m) {
+    return Math.max(CAM_MIN, Math.min(WORLD_W - W, m * PPM - W * 0.34));
+  }
+
+  function frame(ts) {
+    var dt = Math.min((ts - (frame.last || ts)) / 1000, 0.05);
+    frame.last = ts;
+    game.time += dt;
+
+    /* --- flight --- */
+    if (game.flight) {
+      var fl = game.flight;
+      var prevX = planeScreenX(), prevY = planeScreenY();
+      fl.t = Math.min(1, fl.t + dt / fl.dur);
+      var t = fl.t;
+
+      var travelled = fl.gain * (1 - Math.pow(1 - t, 1.8));
+      game.planeM = fl.start + travelled;
+      game.alt = fl.peak * Math.sin(Math.PI * Math.pow(t, 0.92)) + Math.sin(t * 13) * 6 * (1 - t);
+      if (game.alt < 0) game.alt = 0;
+
+      game.camTarget = camFor(game.planeM);
+      game.cam += (game.camTarget - game.cam) * Math.min(1, dt * 7);
+
+      trail.push({ x: prevX, y: prevY, life: 1 });
+
+      var dx = planeScreenX() - prevX, dy = planeScreenY() - prevY;
+      if (Math.abs(dx) + Math.abs(dy) > 0.4) {
+        var target = Math.atan2(dy, Math.max(dx, 0.6));
+        game.rot += (Math.max(-0.9, Math.min(0.9, target)) - game.rot) * Math.min(1, dt * 9);
+      }
+
+      liveDistance(Math.round(travelled), Math.round(game.planeM));
+
+      if (t >= 1) {
+        game.distM = fl.start + fl.gain;
+        game.planeM = game.distM;
+        game.alt = 0;
+        landPuff();
+        audio.land(fl.quality);
+        if (fl.quality > 0.85) sparkleBurst();
+        var done = fl.resolve;
+        game.flight = null;
+        done();
+      }
+    } else {
+      game.camTarget = camFor(game.distM);
+      game.cam += (game.camTarget - game.cam) * Math.min(1, dt * 4);
+      game.rot += (-0.1 - game.rot) * Math.min(1, dt * 4);
+      game.alt += (Math.sin(game.time * 1.6) * 2 + 2 - game.alt) * Math.min(1, dt * 3);
+    }
+
+    /* --- particles --- */
+    var i;
+    for (i = trail.length - 1; i >= 0; i--) {
+      trail[i].life -= dt * 1.25;
+      if (trail[i].life <= 0) trail.splice(i, 1);
+    }
+    for (i = puffs.length - 1; i >= 0; i--) {
+      var p = puffs[i];
+      p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 130 * dt; p.life -= dt * 1.1;
+      if (p.life <= 0) puffs.splice(i, 1);
+    }
+    for (i = sparkles.length - 1; i >= 0; i--) {
+      var s2 = sparkles[i];
+      s2.x += s2.vx * dt; s2.y += s2.vy * dt; s2.vy += 90 * dt; s2.life -= dt * 0.9;
+      if (s2.life <= 0) sparkles.splice(i, 1);
+    }
+
+    /* --- render, back to front --- */
+    var cam = game.cam;
+    drawSky();
+    drawSun(cam);
+    drawClouds(cam, game.time);
+    drawBirds(cam, game.time);
+    drawKites(cam, game.time);
+    drawHills(cam);
+    drawGrass();
+    drawStripes(cam);
+    drawTreeLine(cam);
+    drawRowFar(cam);
+    drawPath(cam);
+    drawBalloons(cam, game.time);
+    drawRowMain(cam, game.time);
+    drawTrail();
+    drawPlaneShadow(planeScreenX(), game.alt);
+    drawPuffs();
+    drawPlane(planeScreenX(), planeScreenY(), game.rot, 1.05 * Math.min(1.25, S));
+    drawSparkles(game.time);
+    drawMeadow(cam);
+    drawButterflies(cam, game.time);
+    drawRowNear(cam);
+    drawFringe(cam);
+
+    requestAnimationFrame(frame);
+  }
+
+  function landPuff() {
+    var x = planeScreenX(), y = laneY - 2;
+    for (var i = 0; i < 18; i++) {
+      puffs.push({
+        x: x, y: y,
+        vx: (Math.random() - 0.5) * 160,
+        vy: -Math.random() * 120,
+        r: 3 + Math.random() * 5,
+        life: 1,
+        c: Math.random() < 0.5 ? '238,223,182' : '150,205,110'
+      });
+    }
+  }
+
+  function sparkleBurst() {
+    var x = planeScreenX(), y = laneY - 34;
+    for (var i = 0; i < 16; i++) {
+      sparkles.push({
+        x: x, y: y,
+        vx: (Math.random() - 0.5) * 220,
+        vy: -70 - Math.random() * 170,
+        life: 1
+      });
+    }
+  }
+
+  /* ---------- read the question out loud ---------- */
+  var speech = {
+    ok: 'speechSynthesis' in window,
+    stop: function () { if (this.ok) window.speechSynthesis.cancel(); },
+    say: function (lines) {
+      if (!this.ok) return;
+      this.stop();
+      lines.forEach(function (line, i) {
+        var u = new SpeechSynthesisUtterance(line);
+        u.rate = 0.92; u.pitch = 1.1;
+        if (i) u.volume = 1;
+        window.speechSynthesis.speak(u);
+      });
+    }
+  };
+
+  /* ---------------------------------------------------------
+     5. UI
+     --------------------------------------------------------- */
+  var el = {
+    hud: document.getElementById('hud'),
+    hudQuestion: document.getElementById('hudQuestion'),
+    hudTotal: document.getElementById('hudTotal'),
+    runway: document.getElementById('runway'),
+    flyMeter: document.getElementById('flyMeter'),
+    flyDistance: document.getElementById('flyDistance'),
+    start: document.getElementById('startScreen'),
+    startBtn: document.getElementById('startBtn'),
+    bestLine: document.getElementById('bestLine'),
+    bestValue: document.getElementById('bestValue'),
+    question: document.getElementById('questionScreen'),
+    qCount: document.getElementById('qCount'),
+    qText: document.getElementById('qText'),
+    qChoices: document.getElementById('qChoices'),
+    result: document.getElementById('resultScreen'),
+    resultEmoji: document.getElementById('resultEmoji'),
+    resultTitle: document.getElementById('resultTitle'),
+    resultMessage: document.getElementById('resultMessage'),
+    resultBest: document.getElementById('resultBest'),
+    finalDistance: document.getElementById('finalDistance'),
+    againBtn: document.getElementById('againBtn'),
+    muteBtn: document.getElementById('muteBtn'),
+    muteIcon: document.getElementById('muteIcon')
+  };
+
+  function show(node) { node.classList.remove('hidden'); }
+  function hide(node) { node.classList.add('hidden'); }
+
+  function hidePanel(node) {
+    return new Promise(function (res) {
+      node.classList.add('leaving');
+      setTimeout(function () { node.classList.add('hidden'); node.classList.remove('leaving'); res(); }, 260);
+    });
+  }
+
+  function liveDistance(gain, total) {
+    el.flyDistance.textContent = '+' + gain + ' m';
+    el.hudTotal.textContent = total + ' m';
+  }
+
+  function buildRunway() {
+    el.runway.innerHTML = '';
+    for (var i = 0; i < QUESTIONS.length; i++) {
+      var d = document.createElement('span');
+      d.className = 'pip';
+      el.runway.appendChild(d);
+    }
+  }
+
+  function paintRunway() {
+    var pips = el.runway.children;
+    for (var i = 0; i < pips.length; i++) {
+      pips[i].className = 'pip' + (i < game.index ? ' done' : i === game.index ? ' current' : '');
+    }
+  }
+
+  function updateHud() {
+    el.hudQuestion.textContent = Math.min(game.index + 1, QUESTIONS.length) + ' / ' + QUESTIONS.length;
+    el.hudTotal.textContent = Math.round(game.distM) + ' m';
+    paintRunway();
+  }
+
+  var bubble = document.createElement('div');
+  bubble.className = 'bubble hidden';
+  document.body.appendChild(bubble);
+
+  function showBubble(gain, note) {
+    bubble.innerHTML = '<span class="gain">+' + gain + ' metres!</span>' +
+                       '<p class="note">' + note + '</p>' +
+                       '<p class="tap">Tap anywhere to keep flying &rarr;</p>';
+    bubble.classList.remove('hidden');
+    requestAnimationFrame(function () { bubble.classList.add('show'); });
+    return new Promise(function (res) {
+      function go(e) {
+        if (e.type === 'keydown' && e.key !== 'Enter' && e.key !== ' ') return;
+        window.removeEventListener('pointerdown', go);
+        window.removeEventListener('keydown', go);
+        bubble.classList.remove('show');
+        setTimeout(function () { bubble.classList.add('hidden'); }, 300);
+        res();
+      }
+      setTimeout(function () {
+        window.addEventListener('pointerdown', go);
+        window.addEventListener('keydown', go);
+      }, 350);
+    });
+  }
+
+  function askQuestion() {
+    var q = QUESTIONS[game.index];
+    updateHud();
+    el.qCount.textContent = 'Question ' + (game.index + 1) + ' of ' + QUESTIONS.length;
+    el.qText.textContent = q.q;
+    el.qChoices.innerHTML = '';
+
+    q.choices.forEach(function (c, i) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'choice';
+      b.innerHTML = '<span class="key">' + (i + 1) + '</span><span class="txt"></span>';
+      b.querySelector('.txt').textContent = c.t;
+      b.addEventListener('click', function () { choose(i); });
+      el.qChoices.appendChild(b);
+    });
+
+    if (speech.ok) {
+      var read = document.createElement('button');
+      read.type = 'button';
+      read.className = 'read-btn';
+      read.innerHTML = '<span aria-hidden="true">&#128266;</span> Read it to me';
+      read.addEventListener('click', function () {
+        var lines = [q.q];
+        q.choices.forEach(function (c, n) { lines.push('Number ' + (n + 1) + '. ' + c.t); });
+        speech.say(lines);
+      });
+      el.qChoices.appendChild(read);
+    }
+
+    show(el.question);
+    window.addEventListener('keydown', keyPick);
+  }
+
+  function keyPick(e) {
+    var n = parseInt(e.key, 10);
+    if (n >= 1 && n <= QUESTIONS[game.index].choices.length) choose(n - 1);
+  }
+
+  var answering = false;
+
+  function choose(i) {
+    if (answering) return;
+    answering = true;
+    window.removeEventListener('keydown', keyPick);
+    speech.stop();
+    audio.pick();
+
+    var q = QUESTIONS[game.index];
+    var choice = q.choices[i];
+    var best = Math.max.apply(null, q.choices.map(function (c) { return c.m; }));
+    var quality = choice.m / best;
+
+    var buttons = el.qChoices.children;
+    for (var b = 0; b < buttons.length; b++) {
+      buttons[b].disabled = true;
+      buttons[b].classList.add(b === i ? 'picked' : 'dim');
+    }
+
+    setTimeout(function () {
+      hidePanel(el.question).then(function () {
+        show(el.flyMeter);
+        audio.launch();
+        return fly(choice.m, quality);
+      }).then(function () {
+        hide(el.flyMeter);
+        updateHud();
+        speech.say([choice.m + ' metres! ' + choice.f]);
+        return showBubble(choice.m, choice.f);
+      }).then(function () {
+        answering = false;
+        game.index++;
+        if (game.index >= QUESTIONS.length) finish();
+        else askQuestion();
+      });
+    }, 520);
+  }
+
+  function fly(gainM, quality) {
+    return new Promise(function (res) {
+      game.flight = {
+        start: game.distM,
+        gain: gainM,
+        peak: Math.min(H * 0.44, 70 + gainM * 3.4),
+        dur: 1.5 + gainM / 50 * 1.5,
+        quality: quality,
+        t: 0,
+        resolve: res
+      };
+    });
+  }
+
+  function medal(total) {
+    var pct = total / MAX_M;
+    if (pct >= 0.92) return { emoji: '&#127942;', title: 'Golden Wings!',
+      msg: 'You answered like a kind, brave pilot the whole way. Your plane flew right across the park!' };
+    if (pct >= 0.75) return { emoji: '&#129352;', title: 'Sky Champion!',
+      msg: 'Wonderful flying. Big feelings, big words, big kindness.' };
+    if (pct >= 0.55) return { emoji: '&#129353;', title: 'Cloud Rider!',
+      msg: 'Great flight! Try again and see which answers lift you higher.' };
+    return { emoji: '&#127775;', title: 'Brave Take-Off!',
+      msg: 'Every pilot practises. Fly again and watch your park get bigger!' };
+  }
+
+  function finish() {
+    var total = Math.round(game.distM);
+    var best = parseInt(localStorage.getItem('ppp_best') || '0', 10);
+    var isRecord = total > best;
+    if (isRecord) localStorage.setItem('ppp_best', String(total));
+
+    var m = medal(total);
+    el.resultEmoji.innerHTML = m.emoji;
+    el.resultTitle.textContent = m.title;
+    el.resultMessage.textContent = m.msg;
+    el.finalDistance.textContent = total + ' m';
+    el.resultBest.innerHTML = isRecord
+      ? (best > 0
+          ? '&#127881; New record! Your old best was <strong>' + best + ' m</strong>.'
+          : '&#127881; Your very first flight is on the record board!')
+      : 'Your best flight so far: <strong>' + Math.max(best, total) + ' m</strong>';
+    show(el.result);
+    audio.fanfare();
+    hide(el.runway);
+  }
+
+  function startGame() {
+    speech.stop();
+    game.index = 0;
+    game.distM = 0;
+    game.planeM = 0;
+    game.alt = 0;
+    game.cam = CAM_MIN;
+    game.camTarget = CAM_MIN;
+    trail = []; puffs = []; sparkles = [];
+    show(el.hud); show(el.runway);
+    buildRunway();
+    updateHud();
+    askQuestion();
+  }
+
+  /* ---------- wiring ---------- */
+  el.startBtn.addEventListener('click', function () {
+    audio.wake();
+    hidePanel(el.start).then(startGame);
+  });
+
+  el.againBtn.addEventListener('click', function () {
+    audio.wake();
+    hidePanel(el.result).then(startGame);
+  });
+
+  el.muteBtn.addEventListener('click', function () {
+    audio.on = !audio.on;
+    localStorage.setItem('ppp_sound', audio.on ? 'on' : 'off');
+    el.muteIcon.innerHTML = audio.on ? '&#128266;' : '&#128263;';
+    el.muteBtn.setAttribute('aria-pressed', String(audio.on));
+    el.muteBtn.setAttribute('aria-label', audio.on ? 'Turn sound off' : 'Turn sound on');
+    if (audio.on) { audio.wake(); audio.pick(); }
+  });
+
+  /* ---------- boot ---------- */
+  var savedBest = parseInt(localStorage.getItem('ppp_best') || '0', 10);
+  if (savedBest > 0) {
+    el.bestValue.textContent = savedBest + ' m';
+    el.bestLine.classList.remove('hidden');
+  }
+  el.muteIcon.innerHTML = audio.on ? '&#128266;' : '&#128263;';
+
+  resize();
+  buildWorld();
+  // park the plane a touch into the park so the start screen looks pretty
+  game.distM = 0;
+  requestAnimationFrame(frame);
+})();
