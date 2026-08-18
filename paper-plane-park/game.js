@@ -40,13 +40,13 @@
       q: 'What are you nervous about?',
       choices: [
         { t: 'I tell Mama or Dada the worry out loud.', m: 50, next: 'bench',
-          f: 'Saying a worry out loud makes it smaller. Big lift!' },
+          f: 'Saying a worry out loud makes it smaller. Big lift! A worry is heavy when you carry it alone — telling someone you trust shrinks it faster than drawing it, and much faster than hiding it.' },
         { t: 'I draw the worry on paper so I can see it.', m: 45, next: 'bench',
-          f: 'Getting the worry outside your head really works.' },
+          f: 'Getting the worry outside your head really works. Drawing flies almost as far as telling — and if you show your picture to Mama or Dada, it turns into telling, and that flies farthest of all.' },
         { t: 'I try hard not to think about it.', m: 20, next: 'hollow',
-          f: 'Hidden worries get heavier. Look where the plane is heading...' },
+          f: 'Trying not to think about a worry does not make it leave. It hides in your pocket and gets a little heavier. Look where the plane is heading...' },
         { t: 'I say "I\'m fine" even when I am not.', m: 15, next: 'hollow',
-          f: 'You are allowed to say the true thing. The plane knows.' }
+          f: 'When you say "I\'m fine" but you are not, nobody can help — they cannot see a worry you cover up. The true thing is always okay to say, and it flies so much farther. The plane knows.' }
       ]
     },
 
@@ -57,11 +57,11 @@
       q: 'It is bedtime and the worry is still there. What do you do?',
       choices: [
         { t: 'Go find Mama or Dada and say it out loud.', m: 30, next: 'bench',
-          f: 'There it goes — the worry just got smaller. Up you climb!' },
+          f: 'There it goes — the worry just got smaller. Up you climb! Telling a grown-up beats whispering and beats hiding, because grown-ups can actually help fix the thing you are worried about.' },
         { t: 'Whisper it to my stuffed animal first.', m: 25, next: 'bench',
-          f: 'A good first step. Grown-ups can help carry it too.' },
+          f: 'A good first step — practising the words makes them easier to say. But your stuffed animal cannot help fix anything. Say it to Mama or Dada next, and watch the worry really shrink.' },
         { t: 'Pull the blanket over my head.', m: 10, next: 'bench',
-          f: 'Worries wait for us. Telling someone is the thing that shrinks them.' }
+          f: 'The blanket hides you, but not the worry — it just waits until morning, a little bigger. Telling someone is the only thing on this list that makes it smaller.' }
       ]
     },
 
@@ -71,13 +71,13 @@
       q: 'What if you see someone sitting alone?',
       choices: [
         { t: 'Ask them, "Do you want to play with me?"', m: 50, next: 'pond',
-          f: 'Kids who imagine reaching out become the kids who do. Soar!' },
+          f: 'Kids who imagine reaching out become the kids who do. Soar! An invitation is the biggest kindness there is, because it says "you belong with us" out loud.' },
         { t: 'Sit next to them and say hello.', m: 45, next: 'pond',
-          f: 'Just sitting close can make someone\'s whole day.' },
+          f: 'Just sitting close can make someone\'s whole day. It flies almost as far as an invitation — you gave them company without making them ask for it.' },
         { t: 'Smile and wave from far away.', m: 30, next: 'pond',
-          f: 'A good start! An invitation flies even farther.' },
+          f: 'A smile and a wave are kind, and they count. But they leave the kid sitting alone. Walking over turns a kind feeling into kind help — that is the part that flies farther.' },
         { t: 'Keep playing with my own friends.', m: 20, next: 'pond',
-          f: 'Your friends are lucky. There is room for one more, too.' }
+          f: 'Your friends are lucky to have you. But you were the one who noticed the kid on the bench — and there is room for one more. Next time, let your noticing turn into an invitation.' }
       ]
     },
 
@@ -88,13 +88,13 @@
       q: 'What will you do if someone is unkind to you?',
       choices: [
         { t: '"I don\'t like when you talk to me that way. Please stop."', m: 50, next: 'kitehill',
-          f: 'Strong, calm words. Practising them makes them easy to find!' },
+          f: 'Strong, calm words fly farthest, because they stand up for you without starting a fight. Practising them now means they will be right there when you need them.' },
         { t: 'Walk away and tell my teacher.', m: 45, next: 'kitehill',
-          f: 'Getting a grown-up is a brave choice, not a tattle.' },
+          f: 'A brave choice, not a tattle — telling a grown-up is exactly right when someone is unkind. Only your own calm words first fly a tiny bit farther.' },
         { t: 'Say nothing and feel bad all day.', m: 20, next: 'puddle',
-          f: 'Your feelings matter. Keeping them in makes the plane heavy.' },
+          f: 'Staying quiet keeps the peace, but the bad feeling stays with YOU all day — and the unkind kid never learns to stop. Your words, or a teacher\'s help, put that feeling down.' },
         { t: 'Say something mean right back.', m: 15, next: 'puddle',
-          f: 'Mean words bounce back and forth. Yours can stop the bounce.' }
+          f: 'Mean words bounce back and forth, and every bounce makes them bigger. Stopping the bounce takes more courage than joining it — that is why answering mean with mean flies the shortest.' }
       ]
     },
 
@@ -105,11 +105,11 @@
       q: 'It happens again at recess. What now?',
       choices: [
         { t: 'Use my calm strong words, then go find my teacher.', m: 30, next: 'kitehill',
-          f: 'That is how you get unstuck. Wings dry, off you go!' },
+          f: 'That is how you get unstuck: your calm words AND a teacher who can make it stop for good. Wings dry, off you go!' },
         { t: 'Go and play somewhere else with someone kind.', m: 28, next: 'kitehill',
-          f: 'Choosing kind people is a superpower.' },
+          f: 'Choosing kind people is a superpower, and it flies almost as far. Just let a teacher know too, so it stops for good and not just for today.' },
         { t: 'Keep it a secret from everyone.', m: 10, next: 'kitehill',
-          f: 'Secrets like this get heavy. A grown-up can carry it with you.' }
+          f: 'A secret like this gets heavier every day you carry it. Grown-ups cannot fix what they cannot see — telling is not weakness, it is how it gets better.' }
       ]
     },
 
@@ -137,13 +137,13 @@
       q: "What if you don't understand something in class?",
       choices: [
         { t: 'Raise my hand and ask the teacher.', m: 50, next: 'windyfield',
-          f: 'Asking questions is what smart pilots do!' },
+          f: 'Asking questions is what smart pilots do! Half the class probably had the same question, the teacher loves being asked, and you get the answer straight away.' },
         { t: 'Ask a friend quietly after the lesson.', m: 40, next: 'windyfield',
-          f: 'Good plan. Teachers love the question too.' },
+          f: 'A good plan — you still asked, and asking is the brave part. The teacher explains it best though, so raising your hand flies a little farther.' },
         { t: 'Try it once more on my own first.', m: 35, next: 'windyfield',
-          f: 'Nice grit! And help is always allowed.' },
+          f: 'Nice grit — trying again on your own grows your brain! Just remember that help is always allowed. Stuck and quiet stays stuck; stuck plus a question gets moving.' },
         { t: 'Pretend I understand it.', m: 15, next: 'windyfield',
-          f: 'Nobody knows everything yet. Asking is how the "yet" disappears.' }
+          f: 'Pretending feels safe for a minute, but the mix-up stays — and next week it grows into a bigger mix-up. Nobody knows everything YET. Asking is how the "yet" disappears.' }
       ]
     },
 
@@ -153,13 +153,13 @@
       q: 'What if you start to feel really frustrated?',
       choices: [
         { t: 'Take three slow belly breaths.', m: 50, next: 'climbtree',
-          f: 'Slow breaths tell your body it is safe. Whoosh!' },
+          f: 'Slow belly breaths tell your body it is safe, and a calm body lets your brain fix the problem. That is why breaths beat a break by a little — and beat giving up by a mile.' },
         { t: 'Take a short break, then try again.', m: 45, next: 'climbtree',
-          f: 'Brains solve things better after a little rest.' },
+          f: 'Brains really do solve things better after a rest — a strong choice. Breaths fly just a bit farther because you do not even have to stop playing to use them.' },
         { t: 'Ask someone to do it for me.', m: 25, next: 'climbtree',
-          f: 'Help is great — try "show me how" instead of "do it for me".' },
+          f: 'Help is great — but when someone does it FOR you, your hands never get to learn it. "Show me how" flies much farther than "do it for me".' },
         { t: 'Yell and give up.', m: 15, next: 'climbtree',
-          f: 'Big feelings are okay. Big breaths come first.' }
+          f: 'Big feelings are okay — every pilot has them. But yelling and quitting means the wind wins. Breaths first, then try again: that is how pilots beat the wind.' }
       ]
     },
 
@@ -170,13 +170,13 @@
       q: 'What if you make a mistake?',
       choices: [
         { t: '"Mistakes are how my brain grows." Then try again.', m: 50, next: 'bridge',
-          f: 'Kids who normalise mistakes grow. Rocket lift!' },
+          f: 'Kids who normalise mistakes grow. Rocket lift! A mistake plus another try is exactly how a brain builds something new — the mistake is part of the learning, not the opposite of it.' },
         { t: 'Tell someone and ask for help fixing it.', m: 45, next: 'bridge',
-          f: 'Owning it takes real courage.' },
+          f: 'Owning a mistake takes real courage, and asking for help gets it fixed fast. Adding "and I will try again" is the only thing that flies farther.' },
         { t: 'Feel embarrassed and stop trying.', m: 20, next: 'bramble',
-          f: 'Everyone feels that. It fades faster when you try again.' },
+          f: 'Everyone feels embarrassed after a mistake — that part is normal. But stopping lets the mistake have the last word. Trying again is what shrinks the embarrassed feeling fastest.' },
         { t: 'Hide it so nobody finds out.', m: 15, next: 'bramble',
-          f: 'Hidden mistakes get heavy. Shared ones get fixed.' }
+          f: 'Hidden mistakes get heavy, and they almost always get found anyway. Shared mistakes get fixed — that is why hiding flies the shortest here.' }
       ]
     },
 
@@ -186,11 +186,11 @@
       q: 'They ask what happened. What do you say?',
       choices: [
         { t: '"I made a mistake. Can you help me fix it?"', m: 30, next: 'bridge',
-          f: 'That sentence gets you out of every bramble patch there is.' },
+          f: '"Can you help me fix it?" gets you out of every bramble patch there is — it is honest AND it brings you a helper. Nothing flies farther than that sentence.' },
         { t: '"I got it wrong, but I am going to try again."', m: 28, next: 'bridge',
-          f: 'Trying again is the whole trick. Off you go!' },
+          f: 'Trying again is the whole trick — honest and brave. Asking for a hand as well is the only thing that would fly farther. Off you go!' },
         { t: '"It wasn\'t me."', m: 10, next: 'bridge',
-          f: 'Mistakes are allowed. Hiding them is what makes them grow.' }
+          f: 'A fib lands you in two bramble patches: the stuck plane and the cover-up. Mistakes are always allowed. Hiding them is the only part that gets you tangled.' }
       ]
     },
 
@@ -201,13 +201,13 @@
       q: 'What if someone asks you to do something wrong?',
       choices: [
         { t: '"No." And I walk away.', m: 50, next: 'lantern',
-          f: 'You can always say no. You can always walk away. Beautiful flying!' },
+          f: 'You can always say no. You can always walk away. Your feet are allowed to follow your own good sense — that is full-strength brave, and it flies the farthest.' },
         { t: 'Say no, and tell Mama or Dada about it after.', m: 50, next: 'lantern',
-          f: 'And you will never be in trouble for telling. Not ever.' },
+          f: 'Just as strong as walking away — and telling Mama or Dada afterwards puts a grown-up on your team. You will never be in trouble for telling. Not ever.' },
         { t: 'Do it, but feel bad about it.', m: 18, next: 'crossroads',
-          f: 'That wobbly feeling is your own good sense talking.' },
+          f: 'That wobbly feeling in your tummy is your own good sense talking — the feeling got it right, even though the throw got it wrong. Next time, let the feeling steer first.' },
         { t: 'Do it so they still like me.', m: 15, next: 'crossroads',
-          f: 'A friend who needs you to do wrong things is not being a friend yet.' }
+          f: 'A friend who needs you to do wrong things is not being a friend yet. Real friends like your "no" — that is actually how you can tell which friends are real.' }
       ]
     },
 
@@ -218,11 +218,11 @@
       q: 'What do you do with the wobbly feeling?',
       choices: [
         { t: 'Tell Dada. I am never in trouble for telling.', m: 30, next: 'lantern',
-          f: 'Never in trouble for telling. That is a promise.' },
+          f: 'Never in trouble for telling. That is a promise. Telling flies farthest because a grown-up can help you fix it all the way — sorry is good, but telling gets you help too.' },
         { t: 'Say sorry to whoever I hurt.', m: 28, next: 'lantern',
-          f: 'Saying sorry is how you turn the plane around.' },
+          f: 'Saying sorry is how you turn the plane around, and it takes courage. Telling Dada as well flies a little farther, because then you are not carrying it alone.' },
         { t: 'Try to forget it happened.', m: 10, next: 'lantern',
-          f: 'Wobbly feelings fade fastest when we say them out loud.' }
+          f: 'Wobbly feelings do not really get forgotten — they wait. Saying them out loud is what makes them fade for real.' }
       ]
     },
 
@@ -419,6 +419,13 @@
       w.gain.gain.setTargetAtTime(0.0001, t, 0.05);
       w.src.stop(t + 0.4);
       this.wind = null;
+    },
+
+    rewind: function () {
+      this.tone(880, 0.5, 'sawtooth', 0.045, 200);
+      this.tone(1200, 0.12, 'triangle', 0.07, 900);
+      this.tone(900, 0.12, 'triangle', 0.07, 650, 0.12);
+      this.tone(650, 0.14, 'triangle', 0.07, 420, 0.24);
     },
 
     land: function (quality) {
@@ -1063,6 +1070,8 @@
     sceneId: START,
     stop: 1,
     journey: [],
+    lifelines: 3,    // do-overs: rewind one landing and answer again
+    rewind: null,
     distM: 0,        // where the plane is parked, in metres
     planeM: 0,       // live plane position while flying
     alt: 0,          // height above the lane, px
@@ -1127,6 +1136,27 @@
         var done = fl.resolve;
         game.flight = null;
         done();
+      }
+    } else if (game.rewind) {
+      var rw = game.rewind;
+      rw.t = Math.min(1, rw.t + dt / rw.dur);
+      var ease = rw.t < 0.5 ? 2 * rw.t * rw.t : 1 - Math.pow(-2 * rw.t + 2, 2) / 2;
+      game.distM = rw.from + (rw.to - rw.from) * ease;
+      game.planeM = game.distM;
+      game.alt = 26 * Math.sin(Math.PI * rw.t) + 2;
+      game.rot -= dt * 9;                      // a backwards barrel roll
+      el.hudTotal.textContent = Math.round(game.distM) + ' m';
+      game.camTarget = camFor(game.planeM);
+      game.cam += (game.camTarget - game.cam) * Math.min(1, dt * 6);
+      trail.push({ x: planeScreenX(), y: planeScreenY(), life: 1 });
+      if (rw.t >= 1) {
+        game.distM = rw.to;
+        game.planeM = rw.to;
+        game.alt = 0;
+        game.rot = -0.1;
+        var doneRw = rw.resolve;
+        game.rewind = null;
+        doneRw();
       }
     } else {
       game.camTarget = camFor(game.distM);
@@ -1486,22 +1516,37 @@
   bubble.className = 'bubble hidden';
   document.body.appendChild(bubble);
 
-  function showBubble(gain, note) {
+  // resolves with 'continue', or 'redo' when a do-over is spent
+  function showBubble(gain, note, redoLeft) {
     bubble.innerHTML = '<span class="gain">+' + gain + ' metres!</span>' +
-                       '<p class="note">' + note + '</p>' +
+                       '<p class="note"></p>' +
+                       (redoLeft > 0
+                         ? '<button type="button" class="bubble-redo">&#128260; Do-over &mdash; fly that one again (' +
+                           redoLeft + ' left)</button>'
+                         : '') +
                        '<p class="tap">Tap anywhere to keep flying &rarr;</p>';
+    bubble.querySelector('.note').textContent = note;
     bubble.classList.remove('hidden');
     requestAnimationFrame(function () { bubble.classList.add('show'); });
     return new Promise(function (res) {
-      function go(e) {
-        if (e.type === 'keydown' && e.key !== 'Enter' && e.key !== ' ') return;
-        if (e.target && e.target.closest && e.target.closest('.icon-btn')) return;
+      function finish(action) {
         window.removeEventListener('pointerdown', go);
         window.removeEventListener('keydown', go);
         bubble.classList.remove('show');
         setTimeout(function () { bubble.classList.add('hidden'); }, 300);
-        res();
+        res(action);
       }
+      function go(e) {
+        if (e.type === 'keydown' && e.key !== 'Enter' && e.key !== ' ') return;
+        if (e.target && e.target.closest &&
+            (e.target.closest('.icon-btn') || e.target.closest('.bubble-redo'))) return;
+        finish('continue');
+      }
+      var redoBtn = bubble.querySelector('.bubble-redo');
+      if (redoBtn) redoBtn.addEventListener('click', function () {
+        audio.tap();
+        finish('redo');
+      });
       setTimeout(function () {
         window.addEventListener('pointerdown', go);
         window.addEventListener('keydown', go);
@@ -1566,6 +1611,7 @@
   function choose(i) {
     if (answering) return;
     answering = true;
+    var startM = game.distM;
     window.removeEventListener('keydown', keyPick);
     speech.stop();
     audio.pick();
@@ -1595,8 +1641,19 @@
         hide(el.flyMeter);
         updateHud();
         if (speech.auto && audio.on) speech.say([choice.m + ' metres! ' + choice.f]);
-        return showBubble(choice.m, choice.f);
-      }).then(function () {
+        return showBubble(choice.m, choice.f, game.lifelines);
+      }).then(function (action) {
+        if (action === 'redo' && game.lifelines > 0) {
+          game.lifelines--;
+          speech.stop();
+          el.placeTag.textContent = '\u23EA Back to ' + q.place;
+          show(el.placeTag);
+          audio.rewind();
+          return rewindTo(startM).then(function () {
+            answering = false;
+            askScene();          // same stop, same question, fresh choice
+          });
+        }
         answering = false;
         game.journey.push({ place: q.place, gain: choice.m, detour: !!DETOURS[game.sceneId] });
         if (choice.next) {
@@ -1608,6 +1665,12 @@
         }
       });
     }, 520);
+  }
+
+  function rewindTo(m) {
+    return new Promise(function (res) {
+      game.rewind = { from: game.distM, to: m, t: 0, dur: 1.15, resolve: res };
+    });
   }
 
   function fly(gainM, quality) {
@@ -1687,6 +1750,8 @@
     game.sceneId = START;
     game.stop = 1;
     game.journey = [];
+    game.lifelines = 3;
+    game.rewind = null;
     game.distM = 0;
     game.planeM = 0;
     game.alt = 0;

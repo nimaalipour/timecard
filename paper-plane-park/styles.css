@@ -259,6 +259,16 @@ body{
 }
 .bubble .note{margin:4px 0 0;font-weight:700;font-size:clamp(14px,3.9vw,17px);color:var(--ink-soft);line-height:1.4}
 .bubble .tap{margin:10px 0 0;font-size:13px;font-weight:800;color:#a9bac5;letter-spacing:.03em}
+.bubble-redo{
+  margin:12px auto 0;display:block;
+  font-family:"Baloo 2","Trebuchet MS",system-ui,sans-serif;font-weight:800;
+  font-size:clamp(14px,3.8vw,17px);
+  border:none;border-radius:999px;cursor:pointer;
+  background:linear-gradient(180deg,#fff8e2,#ffedbd);color:#8a6b1c;
+  padding:10px 20px;
+  box-shadow:inset 0 0 0 2px #f0dfa8, 0 3px 8px rgba(120,90,20,.15);
+}
+.bubble-redo:active{transform:scale(.97)}
 
 /* short / landscape screens: keep the readout out of the plane's flight path */
 @media (max-height:560px){

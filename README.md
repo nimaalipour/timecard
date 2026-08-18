@@ -19,6 +19,14 @@ on its own.
 
 * Tap (or click) an answer, or press `1` `2` `3` `4`.
 * Watch the plane fly. The bigger the answer, the farther it goes.
+* After each landing, the reply doesn't just score the answer — on questions with a
+  real better-and-worse (worries, unkindness, mistakes, peer pressure...) it explains
+  *why* that choice flies farther or shorter than the others. Purely subjective
+  questions (what excites you, what you want to be remembered for) keep simple warm
+  replies with no ranking lecture.
+* **3 do-overs per flight**: every landing card offers "Do-over — fly that one again".
+  The plane loops back to that stop, the metres roll back, and the question opens
+  again for a different answer. The journey map only records the final answer.
 * Tap anywhere to keep flying.
 * 11 stops on the brave route, up to **550 m**. A wobbly answer sends the plane to a
   gentler place first, so a run can be up to 15 stops. The best distance is remembered
