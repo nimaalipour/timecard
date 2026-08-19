@@ -1,0 +1,7 @@
+# Netlify configuration for the Work Note Builder.
+# Static single-file app — no build step. When linking this repo in the
+# Netlify UI, set the project's base directory to "work-note" and this file
+# takes over (publish this folder as the site root).
+
+[build]
+  publish = "."
