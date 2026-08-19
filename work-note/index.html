@@ -74,17 +74,20 @@
     padding: 7px 9px; background: #fff; width: 100%;
   }
   input:focus, select:focus, textarea:focus {
-    outline: 2px solid var(--accent-soft); border-color: var(--accent);
+    outline: 2px solid var(--accent); outline-offset: 1px; border-color: var(--accent);
   }
+  input[type=radio], input[type=checkbox] { width: 17px; height: 17px; accent-color: var(--accent); }
+  fieldset.field { border: none; margin: 0; padding: 0; }
+  .field > legend { font-size: 12.5px; font-weight: 600; color: var(--muted); padding: 0; margin-bottom: 4px; }
   textarea { resize: vertical; min-height: 64px; }
 
   .ta-wrap { position: relative; }
   .ta-wrap textarea, .ta-wrap input[type=text] { padding-right: 40px; }
   button.mic {
     position: absolute; right: 6px; top: 6px;
-    width: 28px; height: 28px; border-radius: 50%;
+    width: 32px; height: 32px; border-radius: 50%;
     border: 1px solid var(--line); background: #fff; cursor: pointer;
-    font-size: 14px; line-height: 1; padding: 0;
+    font-size: 15px; line-height: 1; padding: 0;
   }
   button.mic.listening {
     background: #ffe5e2; border-color: var(--danger);
@@ -105,12 +108,12 @@
 
   .chips { display: flex; flex-wrap: wrap; gap: 6px; }
   button.chip {
-    border-radius: 999px; padding: 4px 11px; font-size: 13px;
+    border-radius: 999px; padding: 5px 12px; font-size: 13px; min-height: 30px;
     background: var(--accent-soft); border-color: transparent; color: var(--accent);
   }
   button.chip:hover { background: #d2e3f7; }
   .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 999px; overflow: hidden; }
-  .seg button { border: none; border-radius: 0; padding: 4px 12px; font-size: 13px; background: #fff; }
+  .seg button { border: none; border-radius: 0; padding: 5px 13px; font-size: 13px; min-height: 30px; background: #fff; }
   .seg button.on { background: var(--accent); color: #fff; }
 
   .picked { display: flex; flex-wrap: wrap; gap: 6px; min-height: 30px; padding: 5px 0; }
@@ -119,8 +122,22 @@
     background: var(--ink); color: #fff; border-radius: 999px;
     padding: 3px 6px 3px 12px; font-size: 13px;
   }
-  .picked .tag button { background: transparent; border: none; color: #fff; padding: 0 4px; font-size: 13px; }
+  .picked .tag button { background: transparent; border: none; color: #fff; padding: 0 6px; font-size: 14px; min-width: 26px; min-height: 26px; }
   .picked .none { color: var(--muted); font-size: 13px; padding: 4px 0; }
+  @media (pointer: coarse) {
+    button.chip, .seg button { min-height: 38px; }
+    button.mic { width: 38px; height: 38px; }
+    .picked .tag button { min-width: 34px; min-height: 34px; }
+    input[type=radio], input[type=checkbox] { width: 21px; height: 21px; }
+  }
+  .warn { color: var(--danger); font-size: 12.5px; margin-top: 4px; }
+  .fab {
+    display: none; position: fixed; right: 16px; bottom: 16px; z-index: 10;
+    background: var(--ink); color: #fff; border: none; border-radius: 999px;
+    padding: 12px 18px; font-weight: 600; box-shadow: 0 3px 12px rgba(0,0,0,.25);
+  }
+  @media (max-width: 880px) { .fab { display: block; } }
+  @media print { .fab { display: none; } }
 
   .radio-row { display: flex; flex-wrap: wrap; gap: 4px 16px; }
   .radio-row label, label.check { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; cursor: pointer; }
@@ -159,10 +176,11 @@
   .soft-note { font-size: 12.5px; color: var(--muted); margin-top: 6px; }
   footer.foot { text-align: center; color: var(--muted); font-size: 12.5px; padding: 0 20px 30px; }
 
+  /* printing (in-app button or the browser's own Ctrl+P) shows only the active document */
   @media print {
     body * { visibility: hidden; }
-    body.printing .print-target, body.printing .print-target * { visibility: visible; }
-    body.printing .print-target {
+    .print-target, .print-target * { visibility: visible; }
+    .print-target {
       position: absolute; left: 0; top: 0; width: 100%;
       border: none; max-height: none; overflow: visible;
       font: 13pt/1.5 Georgia, "Times New Roman", serif; padding: 0.5in;
@@ -174,11 +192,11 @@
 
 <header class="top">
   <h1>📋 Work Note Builder</h1>
-  <span class="tag">occupational injury visits — everything stays on this device</span>
+  <span class="tag">occupational injury visits — notes are built on this device</span>
   <span class="spacer"></span>
   <div class="id-fields">
-    <input type="text" id="clinicName" placeholder="Clinic name (optional)" title="Shown at the top of the work status report">
-    <input type="text" id="providerName" placeholder="Provider name & credentials (optional)" title="Shown on the work status report">
+    <input type="text" id="clinicName" placeholder="Clinic name (optional)" aria-label="Clinic name" title="Shown at the top of the work status report">
+    <input type="text" id="providerName" placeholder="Provider name & credentials (optional)" aria-label="Provider name and credentials" title="Shown on the work status report">
   </div>
 </header>
 
@@ -229,11 +247,12 @@
           <input type="date" id="lastVisitDate">
         </div>
       </div>
+      <div id="dateWarnings" class="warn hidden" role="alert"></div>
       <button type="button" id="toggleClients" class="subtle">⚙ Manage client list…</button>
       <div id="clientPanel" class="hidden">
         <div class="row">
           <div class="field grow">
-            <label>Upload a client list (.csv or .txt — one client per line; first column is used)</label>
+            <label for="clientFile">Upload a client list (.csv/.tsv — first column is used; .txt — one client per line)</label>
             <input type="file" id="clientFile" accept=".csv,.txt,.tsv,text/plain,text/csv">
           </div>
         </div>
@@ -273,10 +292,10 @@
         <div class="field grow">
           <label>Body parts involved</label>
           <div class="seg" id="sideSeg">
-            <button type="button" data-side="" class="on">no side</button>
-            <button type="button" data-side="left">left</button>
-            <button type="button" data-side="right">right</button>
-            <button type="button" data-side="bilateral">bilateral</button>
+            <button type="button" data-side="" class="on" aria-pressed="true">no side</button>
+            <button type="button" data-side="left" aria-pressed="false">left</button>
+            <button type="button" data-side="right" aria-pressed="false">right</button>
+            <button type="button" data-side="bilateral" aria-pressed="false">bilateral</button>
           </div>
           <div class="chips" id="partChips" style="margin-top:6px"></div>
           <div class="row" style="margin-top:6px">
@@ -309,15 +328,15 @@
           </div>
         </div>
         <div class="row" id="workedSinceBlock">
-          <div class="field grow">
-            <label>Has the employee been working since the injury? <span class="hint">— shown because the visit is more than a day after the injury</span></label>
+          <fieldset class="field grow">
+            <legend>Has the employee been working since the injury? <span class="hint">— shown because the visit is more than a day after the injury</span></legend>
             <div class="radio-row">
               <label><input type="radio" name="workedSince" value="full"> Yes — full duty</label>
               <label><input type="radio" name="workedSince" value="modified"> Yes — modified duty</label>
               <label><input type="radio" name="workedSince" value="no"> No — has not worked</label>
               <label><input type="radio" name="workedSince" value="" checked> Not stated</label>
             </div>
-          </div>
+          </fieldset>
         </div>
       </div>
 
@@ -366,22 +385,22 @@
       <h2>Today's plan &amp; work status</h2>
 
       <div class="row">
-        <div class="field grow">
-          <label>Work status</label>
+        <fieldset class="field grow">
+          <legend>Work status</legend>
           <div class="radio-row">
             <label><input type="radio" name="workStatus" value="full" checked> Full duty — no restrictions</label>
             <label><input type="radio" name="workStatus" value="modified"> Modified duty</label>
             <label><input type="radio" name="workStatus" value="off"> Off work</label>
           </div>
-        </div>
+        </fieldset>
       </div>
 
       <div class="row" id="restrictionsBlock">
-        <div class="field grow">
-          <label>Restrictions</label>
+        <fieldset class="field grow">
+          <legend>Restrictions</legend>
           <div class="check-list">
             <label class="check"><input type="checkbox" id="rLift"> No lifting, pushing, or pulling over
-              <input type="number" id="rLiftLbs" value="10" min="1" max="100"> lbs</label>
+              <input type="number" id="rLiftLbs" value="10" min="1" max="100" aria-label="Weight limit in pounds"> lbs</label>
             <label class="check"><input type="checkbox" id="rOverhead"> No overhead reaching</label>
             <label class="check"><input type="checkbox" id="rRepetitive"> No repetitive use of the affected extremity</label>
             <label class="check"><input type="checkbox" id="rSplint"> Splint/brace to be worn at work</label>
@@ -394,18 +413,19 @@
             <textarea id="rOther" rows="2" placeholder="Other restrictions — one per line"></textarea>
             <button type="button" class="mic" data-mic="rOther" title="Dictate">🎤</button>
           </div>
-        </div>
+        </fieldset>
       </div>
 
       <div class="row">
-        <div class="field grow">
-          <label>First aid claim? <span class="hint">— mostly relevant on the first visit</span></label>
+        <fieldset class="field grow">
+          <legend>First aid claim? <span class="hint">— mostly relevant on the first visit</span></legend>
           <div class="radio-row">
             <label><input type="radio" name="firstAid" value="yes"> Yes — meets first aid criteria</label>
             <label><input type="radio" name="firstAid" value="no"> No — not first aid</label>
             <label><input type="radio" name="firstAid" value="" checked> Not addressed</label>
           </div>
-        </div>
+          <div id="firstAidWarn" class="warn hidden">⚠ First aid alongside off-work status, restrictions, or referrals is unusual — double-check before sending.</div>
+        </fieldset>
       </div>
 
       <div class="row">
@@ -495,21 +515,24 @@
   <!-- ============ OUTPUT ============ -->
   <div class="out-col">
     <div class="tabs">
-      <button type="button" id="tabNote" class="on">Work Note</button>
-      <button type="button" id="tabStatus">Work Status</button>
+      <button type="button" id="tabNote" class="on" aria-pressed="true">Work Note</button>
+      <button type="button" id="tabStatus" aria-pressed="false">Work Status</button>
     </div>
     <div class="out-actions">
       <button type="button" class="primary" id="copyBtn">📄 Copy to clipboard</button>
       <button type="button" id="printBtn">🖨 Print</button>
-      <span class="copied-note" id="copiedNote">Copied ✓</span>
+      <span class="copied-note" id="copiedNote" role="status" aria-live="polite">Copied ✓</span>
     </div>
     <pre class="out print-target" id="noteOut"></pre>
     <pre class="out hidden" id="statusOut"></pre>
   </div>
 </div>
 
+<button type="button" id="jumpOut" class="fab">📄 View note</button>
+
 <footer class="foot">
-  Notes are generated on this device only and are never sent anywhere.
+  Typed information never leaves this device — notes are generated locally and nothing is uploaded.
+  The one exception is the 🎤 dictation button, which uses your browser's built-in speech service: the audio is sent to the browser vendor for transcription, so skip it if that isn't appropriate for your setting.
   The client list and your clinic/provider names are remembered in this browser; patient fields are kept only until the tab is closed or the form is cleared.
 </footer>
 
@@ -602,24 +625,48 @@ function addClients(names) {
   renderClients();
   return added;
 }
-function parseClientText(text) {
+function parseClientText(text, opts) {
+  const csv = !opts || opts.csv !== false;   // pasted text keeps commas in names; CSV files split on them
   const out = [];
-  const rows = esc(text).replace(/^\uFEFF/, '').split(/\r\n|\r|\n/);
-  for (let i = 0; i < rows.length; i++) {
-    let row = rows[i].trim();
-    if (!row) continue;
-    // take the first cell of a CSV/TSV row; honor simple quoted cells
-    let cell;
-    if (row[0] === '"') {
-      const m = /^"((?:[^"]|"")*)"/.exec(row);
-      cell = m ? m[1].replace(/""/g, '"') : row;
+  const raw = esc(text).replace(/^\uFEFF/, '').split(/\r\n|\r|\n/);
+
+  // rejoin physical lines that belong to one quoted CSV cell (Excel can embed newlines)
+  const rows = [];
+  let buf = null;
+  for (const line of raw) {
+    if (buf !== null) {
+      buf += ' ' + line;
+      if (((buf.match(/"/g) || []).length % 2) === 0) { rows.push(buf); buf = null; }
+    } else if (csv && line[0] === '"' && ((line.match(/"/g) || []).length % 2) === 1) {
+      buf = line;
     } else {
-      cell = row.split(/[,\t;]/)[0];
+      rows.push(line);
     }
-    cell = cell.trim().replace(/^"|"$/g, '');
+  }
+  if (buf !== null) rows.push(buf);
+
+  let first = true;
+  for (let row of rows) {
+    row = row.trim();
+    if (!row) continue;
+    let cell;
+    if (csv) {
+      if (row[0] === '"') {
+        const m = /^"((?:[^"]|"")*)"/.exec(row);
+        cell = m ? m[1].replace(/""/g, '"') : row;
+      } else {
+        cell = row.split(/[,\t;]/)[0];
+      }
+    } else {
+      cell = row.split('\t')[0];
+    }
+    cell = cell.trim().replace(/^"|"$/g, '').replace(/\s+/g, ' ');
     if (!cell) continue;
-    // skip a header row like "Client", "Company Name", "Employer"
-    if (i === 0 && /^(clients?|compan(y|ies)|employers?|names?|company name|client name|employer name)$/i.test(cell)) continue;
+    // skip a header row like "Client", "Company Name", "Employer" (first non-empty row only)
+    if (first) {
+      first = false;
+      if (/^(clients?|compan(y|ies)|employers?|names?|company name|client name|employer name)$/i.test(cell)) continue;
+    }
     out.push(cell);
   }
   return out;
@@ -712,8 +759,8 @@ function addOrderRow(text, status) {
   const row = document.createElement('div');
   row.className = 'dyn-row order-row';
   row.innerHTML =
-    '<input type="text" class="o-text" placeholder="e.g. MRI right shoulder">' +
-    '<select class="o-status">' +
+    '<input type="text" class="o-text" placeholder="e.g. MRI right shoulder" aria-label="Order from the last visit">' +
+    '<select class="o-status" aria-label="Authorization status">' +
       '<option value="approved">Approved</option>' +
       '<option value="not approved">Not approved</option>' +
       '<option value="pending">Pending authorization</option>' +
@@ -728,13 +775,13 @@ function addTherapyRow(type, done, auth) {
   const row = document.createElement('div');
   row.className = 'dyn-row therapy-row';
   row.innerHTML =
-    '<select class="t-type">' +
+    '<select class="t-type" aria-label="Therapy type">' +
       '<option>Physical therapy</option>' +
       '<option>Acupuncture</option>' +
       '<option>Chiropractic</option>' +
     '</select>' +
-    '<input type="number" class="t-done" min="0" max="99" placeholder="done"> of ' +
-    '<input type="number" class="t-auth" min="0" max="99" placeholder="auth."> sessions' +
+    '<input type="number" class="t-done" min="0" max="99" placeholder="done" aria-label="Sessions completed"> of ' +
+    '<input type="number" class="t-auth" min="0" max="99" placeholder="auth." aria-label="Sessions authorized or requested"> sessions' +
     '<button type="button" class="x" title="Remove">✕</button>';
   row.querySelector('.t-type').value = type || 'Physical therapy';
   row.querySelector('.t-done').value = done ?? '';
@@ -769,7 +816,11 @@ function gather() {
   else if (visitDate) followUpDate = new Date(visitDate.getFullYear(), visitDate.getMonth(), visitDate.getDate() + Number(fu));
 
   const restrictions = [];
-  if ($('rLift').checked) restrictions.push('No lifting, pushing, or pulling over ' + (Number($('rLiftLbs').value) || 10) + ' lbs');
+  if ($('rLift').checked) {
+    const lbs = Number($('rLiftLbs').value);
+    // a cleared/zero weight box prints a visible placeholder rather than a silent default
+    restrictions.push('No lifting, pushing, or pulling over ' + (lbs > 0 ? lbs : '[weight]') + ' lbs');
+  }
   if ($('rOverhead').checked) restrictions.push('No overhead reaching');
   if ($('rRepetitive').checked) restrictions.push('No repetitive use of the affected extremity');
   if ($('rSplint').checked) restrictions.push('Splint/brace to be worn at work');
@@ -824,10 +875,11 @@ function headerBlock(d, title) {
 
 function planBlock(d) {
   const out = [];
+  const dot = s => /[.!?]$/.test(s) ? s : s + '.';
   out.push('PLAN');
-  if (d.meds.length) out.push('Medications dispensed/prescribed: ' + d.meds.join('; ') + '.');
-  if (d.dme.length) out.push('DME dispensed: ' + d.dme.join('; ') + '.');
-  if (d.referrals.length) out.push('Referrals/orders requested: ' + d.referrals.join('; ') + '.');
+  if (d.meds.length) out.push(dot('Medications dispensed/prescribed: ' + d.meds.join('; ')));
+  if (d.dme.length) out.push(dot('DME dispensed: ' + d.dme.join('; ')));
+  if (d.referrals.length) out.push(dot('Referrals/orders requested: ' + d.referrals.join('; ')));
   if (!d.meds.length && !d.dme.length && !d.referrals.length) out.push('No medications, DME, or referrals today.');
 
   if (d.workStatus === 'full') {
@@ -836,8 +888,10 @@ function planBlock(d) {
     out.push('Work status: modified duty with the following restrictions:');
     if (d.restrictions.length) d.restrictions.forEach(r => out.push('  - ' + r));
     else out.push('  - [no restrictions entered]');
+  } else if (d.followUpDate) {
+    out.push('Work status: off work through ' + fmtDate(d.followUpDate) + '.');
   } else {
-    out.push('Work status: off work' + (d.followUpDate ? ' through ' + fmtDate(d.followUpDate) : ', to be re-evaluated at the next visit') + '.');
+    out.push('Work status: off work' + (d.discharged ? '' : ', to be re-evaluated at the next visit') + '.');
   }
 
   if (d.firstAid === 'yes') out.push('This injury meets first aid criteria.');
@@ -846,7 +900,7 @@ function planBlock(d) {
   if (d.discharged) out.push('Follow-up: none — discharged from care today.');
   else if (d.followUpDate) {
     const inDays = d.visitDate ? daysBetween(d.visitDate, d.followUpDate) : null;
-    out.push('Follow-up: return to clinic on ' + fmtDate(d.followUpDate) + (inDays ? ' (in ' + inDays + (inDays === 1 ? ' day' : ' days') + ')' : '') + '.');
+    out.push('Follow-up: return to clinic on ' + fmtDate(d.followUpDate) + (inDays && inDays > 0 ? ' (in ' + inDays + (inDays === 1 ? ' day' : ' days') + ')' : '') + '.');
   } else {
     out.push('Follow-up: [follow-up date]');
   }
@@ -861,7 +915,7 @@ function buildInitialNote(d) {
 
   out.push('CHIEF COMPLAINT');
   out.push(d.cc ? sentenceCase(d.cc)
-                : (d.bodyParts.length ? sentenceCase(listSentence(d.bodyParts) + ' pain') : '[chief complaint]'));
+                : (d.bodyParts.length ? sentenceCase('Injury involving the ' + listSentence(d.bodyParts)) : '[chief complaint]'));
   out.push('');
 
   out.push('HISTORY OF PRESENT ILLNESS');
@@ -900,6 +954,12 @@ function buildRecheckNote(d) {
   const name = d.employee || 'The patient';
   const out = headerBlock(d, 'WORK INJURY — RECHECK VISIT');
   out.push('');
+
+  if (d.cc) {
+    out.push('CHIEF COMPLAINT');
+    out.push(sentenceCase(d.cc));
+    out.push('');
+  }
 
   out.push('INTERVAL HISTORY');
   const ih = [];
@@ -968,12 +1028,12 @@ function buildWorkStatus(d) {
   if (d.workStatus === 'full') {
     out.push('May work FULL DUTY without restrictions as of ' + from + '.');
   } else if (d.workStatus === 'modified') {
-    out.push('May work MODIFIED DUTY from ' + from + (through ? ' through ' + through : '') + ' with the following restrictions:');
+    out.push('May work MODIFIED DUTY ' + (through ? 'from ' + from + ' through ' + through : 'as of ' + from) + ' with the following restrictions:');
     if (d.restrictions.length) d.restrictions.forEach(r => out.push('  • ' + r));
     else out.push('  • [no restrictions entered]');
-    out.push('If modified duty is not available, the employee should remain off work for this period.');
+    if (through) out.push('If modified duty is not available, the employee should remain off work for this period.');
   } else {
-    out.push('OFF WORK from ' + from + (through ? ' through ' + through : '') + '. To be re-evaluated at the next visit.');
+    out.push('OFF WORK from ' + from + (through ? ' through ' + through : '') + '.' + (d.discharged ? '' : ' To be re-evaluated at the next visit.'));
   }
   out.push('');
 
@@ -1025,6 +1085,15 @@ function regen() {
   // custom follow-up date field
   $('followUpCustomField').classList.toggle('hidden', d.followUpChoice !== 'custom');
 
+  // sanity warnings: a one-key date typo shouldn't yield a confident wrong document
+  const warns = [];
+  if (d.injuryDate && d.visitDate && d.injuryDate > d.visitDate) warns.push('⚠ The injury date is after the visit date.');
+  if (d.followUpDate && d.visitDate && d.followUpDate < d.visitDate) warns.push('⚠ The follow-up date is before the visit date.');
+  if (d.visitType === 'recheck' && d.lastVisitDate && d.visitDate && d.lastVisitDate > d.visitDate) warns.push('⚠ The last-visit date is after the visit date.');
+  $('dateWarnings').textContent = warns.join('  ');
+  $('dateWarnings').classList.toggle('hidden', !warns.length);
+  $('firstAidWarn').classList.toggle('hidden', !(d.firstAid === 'yes' && (d.workStatus !== 'full' || d.referrals.length > 0)));
+
   $('noteOut').textContent = d.visitType === 'initial' ? buildInitialNote(d) : buildRecheckNote(d);
   $('statusOut').textContent = buildWorkStatus(d);
 }
@@ -1035,6 +1104,8 @@ function setTab(tab) {
   activeTab = tab;
   $('tabNote').classList.toggle('on', tab === 'note');
   $('tabStatus').classList.toggle('on', tab === 'status');
+  $('tabNote').setAttribute('aria-pressed', String(tab === 'note'));
+  $('tabStatus').setAttribute('aria-pressed', String(tab === 'status'));
   $('noteOut').classList.toggle('hidden', tab !== 'note');
   $('statusOut').classList.toggle('hidden', tab !== 'status');
   $('noteOut').classList.toggle('print-target', tab === 'note');
@@ -1057,18 +1128,20 @@ async function copyActive() {
   setTimeout(() => note.classList.remove('show'), 1800);
 }
 function printActive() {
-  document.body.classList.add('printing');
   window.print();
 }
-window.addEventListener('afterprint', () => document.body.classList.remove('printing'));
 
 /* ---------------- dictation (Web Speech API) ---------------- */
 const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
 let activeRec = null, activeMicBtn = null;
 
+function micNote(msg) { $('micHint').textContent = msg; }
 function stopDictation() {
   if (activeRec) { try { activeRec.stop(); } catch (e) {} }
-  if (activeMicBtn) activeMicBtn.classList.remove('listening');
+  if (activeMicBtn) {
+    activeMicBtn.classList.remove('listening');
+    activeMicBtn.setAttribute('aria-pressed', 'false');
+  }
   activeRec = null; activeMicBtn = null;
 }
 function startDictation(btn, targetId) {
@@ -1088,11 +1161,20 @@ function startDictation(btn, targetId) {
     target.value = (target.value ? target.value.replace(/\s+$/, '') + ' ' : '') + text;
     target.dispatchEvent(new Event('input', { bubbles: true }));
   };
-  rec.onend = () => { if (activeRec === rec) stopDictation(); };
-  rec.onerror = () => { if (activeRec === rec) stopDictation(); };
+  rec.onend = () => { if (activeRec === rec) { stopDictation(); micNote(''); } };
+  rec.onerror = ev => {
+    if (activeRec !== rec) return;
+    stopDictation();
+    const why = ev.error || 'error';
+    micNote('🎤 dictation stopped (' + why + ')' +
+            (why === 'not-allowed' || why === 'service-not-allowed' ? ' — check the microphone permission' : '') +
+            (why === 'network' ? ' — the speech service needs an internet connection' : ''));
+  };
   activeRec = rec; activeMicBtn = btn;
   btn.classList.add('listening');
-  try { rec.start(); } catch (e) { stopDictation(); }
+  btn.setAttribute('aria-pressed', 'true');
+  micNote('🎤 listening — tap the mic again to stop');
+  try { rec.start(); } catch (e) { stopDictation(); micNote('🎤 could not start dictation'); }
 }
 function wireDictation() {
   const buttons = document.querySelectorAll('button.mic');
@@ -1101,21 +1183,25 @@ function wireDictation() {
     $('micHint').textContent = '(built-in dictation needs Chrome, Edge, or Safari — your device dictation works in any field)';
     return;
   }
-  buttons.forEach(b => b.addEventListener('click', () => {
-    if (activeMicBtn === b) stopDictation();
-    else startDictation(b, b.dataset.mic);
-  }));
+  buttons.forEach(b => {
+    b.setAttribute('aria-pressed', 'false');
+    b.addEventListener('click', () => {
+      if (activeMicBtn === b) { stopDictation(); micNote(''); }
+      else startDictation(b, b.dataset.mic);
+    });
+  });
 }
 
 /* ---------------- draft autosave (sessionStorage) ---------------- */
 const DRAFT_KEY = 'worknote.draft.v1';
 let restoring = false;
 
+const TRANSIENT_FIELDS = new Set(['clientPaste', 'clientAddOne', 'partCustom']); // scratch inputs, not part of the note
 function saveDraft() {
   if (restoring) return;
   const fields = {};
   document.querySelectorAll('#app input[id], #app select[id], #app textarea[id]').forEach(el => {
-    if (el.type === 'file') return;
+    if (el.type === 'file' || TRANSIENT_FIELDS.has(el.id)) return;
     fields[el.id] = el.type === 'checkbox' ? el.checked : el.value;
   });
   const draft = {
@@ -1166,8 +1252,18 @@ function clearForm() {
   $('ordersRows').innerHTML = '';
   $('therapyRows').innerHTML = '';
   $('visitDate').value = toISO(new Date());
+  $('visitType').value = 'initial';
+  setSide('');
   renderPicked();
   regen();
+}
+function setSide(side) {
+  currentSide = side;
+  document.querySelectorAll('#sideSeg button').forEach(b => {
+    const on = b.dataset.side === side;
+    b.classList.toggle('on', on);
+    b.setAttribute('aria-pressed', String(on));
+  });
 }
 
 /* ---------------- prefs (clinic/provider names, localStorage) ---------------- */
@@ -1207,9 +1303,7 @@ function init() {
   // side segment
   $('sideSeg').addEventListener('click', ev => {
     const b = ev.target.closest('button[data-side]');
-    if (!b) return;
-    currentSide = b.dataset.side;
-    document.querySelectorAll('#sideSeg button').forEach(x => x.classList.toggle('on', x === b));
+    if (b) setSide(b.dataset.side);
   });
 
   // custom body part
@@ -1228,6 +1322,7 @@ function init() {
       if (!chip) return;
       const ta = $(box.dataset.append);
       const line = chip.textContent.trim();
+      if (lines(ta.value).some(l => l.toLowerCase() === line.toLowerCase())) return; // already listed
       ta.value = ta.value.trim() ? ta.value.trim() + '\n' + line : line;
       ta.dispatchEvent(new Event('input', { bubbles: true }));
     });
@@ -1244,14 +1339,15 @@ function init() {
     if (!file) return;
     const reader = new FileReader();
     reader.onload = () => {
-      const added = addClients(parseClientText(reader.result));
+      // .txt is one-name-per-line (commas kept); everything else is treated as CSV/TSV
+      const added = addClients(parseClientText(reader.result, { csv: !/\.txt$/i.test(file.name) }));
       alert(added + (added === 1 ? ' client' : ' clients') + ' added.');
       ev.target.value = '';
     };
     reader.readAsText(file);
   });
   $('clientImport').addEventListener('click', () => {
-    const names = [...parseClientText($('clientPaste').value)];
+    const names = parseClientText($('clientPaste').value, { csv: false });
     const one = $('clientAddOne').value.trim();
     if (one) names.push(one);
     const added = addClients(names);
@@ -1276,6 +1372,8 @@ function init() {
   $('clearForm').addEventListener('click', () => {
     if (confirm('Clear all patient fields and start the next note? (Your client list and clinic/provider names are kept.)')) clearForm();
   });
+  $('jumpOut').addEventListener('click', () =>
+    document.querySelector('.out-col').scrollIntoView({ behavior: 'smooth', block: 'start' }));
 
   wireDictation();
   regen();

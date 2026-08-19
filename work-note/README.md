@@ -14,10 +14,10 @@ uploaded anywhere.
 1. **Visit type** — choose *Initial visit* or *Follow-up / recheck*. The form
    and both generated documents change to match.
 2. **Client (employer)** — pick from the dropdown. Click **⚙ Manage client
-   list…** to upload a `.csv`/`.txt` list (one client per line; the first CSV
-   column is used and a header row like "Company Name" is skipped), paste
-   names, or add them one at a time. The list is saved in the browser and is
-   there next time.
+   list…** to upload a list (`.csv`/`.tsv`: first column used, a header row
+   like "Company Name" skipped; `.txt`: one name per line), paste names one
+   per line (commas in names like "Acme, Inc." are kept), or add them one at
+   a time. The list is saved in the browser and is there next time.
 3. Fill or **dictate** (🎤 on each text box, in Chrome/Edge/Safari) the history:
    - chief complaint(s), body parts (tap-to-pick with left/right/bilateral),
      date of injury, pain level;
@@ -32,7 +32,11 @@ uploaded anywhere.
    checkboxes, first aid yes/no, medications and DME dispensed, referrals
    requested, and the follow-up interval (or a custom date, or discharge).
 5. The **Work Note** and **Work Status** tabs on the right update live —
-   **Copy to clipboard** for the EMR, **Print** for the employer copy.
+   **Copy to clipboard** for the EMR, **Print** for the employer copy
+   (the in-app button and the browser's own Ctrl+P both print just the
+   document on the active tab). Implausible inputs — a follow-up date before
+   the visit, an injury date in the future, "first aid" combined with
+   off-work status or referrals — get a red warning in the form.
 
 ## What is remembered, and where
 
@@ -42,8 +46,14 @@ uploaded anywhere.
 | The note in progress | this tab (`sessionStorage`) | until the tab closes or **Clear form** |
 | Patient data | nowhere else — never leaves the device | — |
 
-**🧹 Clear form** wipes the patient fields for the next visit but keeps the
-client list and the clinic/provider names.
+**🧹 Clear form** wipes the patient fields for the next visit (and resets the
+visit type to *Initial*) but keeps the client list and the clinic/provider
+names.
+
+One privacy caveat: the 🎤 dictation buttons use the browser's built-in speech
+service, which sends the audio to the browser vendor for transcription. Typing
+(or using a local dictation tool such as a device keyboard's dictation or
+Dragon) keeps everything on the device.
 
 ## Changing the templates
 
