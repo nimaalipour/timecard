@@ -604,7 +604,7 @@ function addClients(names) {
 }
 function parseClientText(text) {
   const out = [];
-  const rows = esc(text).split(/\r\n|\r|\n/);
+  const rows = esc(text).replace(/^\uFEFF/, '').split(/\r\n|\r|\n/);
   for (let i = 0; i < rows.length; i++) {
     let row = rows[i].trim();
     if (!row) continue;
@@ -879,12 +879,15 @@ function buildInitialNote(d) {
   s1 += '.';
   hpi.push(s1);
   if (d.bodyParts.length) hpi.push(cap(p.subj) + ' report' + p.s + ' symptoms involving the ' + listSentence(d.bodyParts) + '.');
-  if (d.cc) hpi.push(sentenceCase(d.cc));
   if (d.pain !== '') hpi.push(cap(p.subj) + ' rate' + p.s + ' the pain today at ' + d.pain + '/10.');
   if (d.sinceInjury) hpi.push('Since the day of injury: ' + sentenceCase(d.sinceInjury));
-  if (d.workedSince === 'full') hpi.push(cap(p.subj) + ' ' + p.have + ' continued working full duty since the injury.');
-  else if (d.workedSince === 'modified') hpi.push(cap(p.subj) + ' ' + p.have + ' been working modified duty since the injury.');
-  else if (d.workedSince === 'no') hpi.push(cap(p.subj) + ' ' + p.have + ' not worked since the injury.');
+  // only meaningful when the visit is more than a day after the injury (mirrors the form)
+  const gap = (d.visitDate && d.injuryDate) ? daysBetween(d.injuryDate, d.visitDate) : null;
+  if (gap !== null && gap > 1) {
+    if (d.workedSince === 'full') hpi.push(cap(p.subj) + ' ' + p.have + ' continued working full duty since the injury.');
+    else if (d.workedSince === 'modified') hpi.push(cap(p.subj) + ' ' + p.have + ' been working modified duty since the injury.');
+    else if (d.workedSince === 'no') hpi.push(cap(p.subj) + ' ' + p.have + ' not worked since the injury.');
+  }
   out.push(hpi.join(' '));
   out.push('');
 
@@ -906,7 +909,6 @@ function buildRecheckNote(d) {
   if (d.client) s1 += ' while working for ' + d.client;
   s1 += '.';
   ih.push(s1);
-  if (d.cc) ih.push(sentenceCase(d.cc));
   if (d.intervalHistory) {
     ih.push('Since the last visit' + (d.lastVisitDate ? ' on ' + fmtDate(d.lastVisitDate) : '') + ': ' + sentenceCase(d.intervalHistory));
   }
