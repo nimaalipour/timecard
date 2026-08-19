@@ -234,12 +234,29 @@
         </div>
       </div>
       <div class="row">
+        <div class="field grow">
+          <label for="jobTitle">Job title <span class="hint">— e.g. CNA, warehouse associate</span></label>
+          <input type="text" id="jobTitle" autocomplete="off">
+        </div>
+        <div class="field">
+          <label for="employedSince">Employed since <span class="hint">— approx., optional</span></label>
+          <input type="text" id="employedSince" placeholder="e.g. March 2026" autocomplete="off">
+        </div>
+      </div>
+      <div class="row">
+        <div class="field">
+          <label for="onsetType">Injury type</label>
+          <select id="onsetType">
+            <option value="incident">Specific incident</option>
+            <option value="cumulative">Cumulative / repetitive strain</option>
+          </select>
+        </div>
         <div class="field">
           <label for="visitDate">Date of visit</label>
           <input type="date" id="visitDate">
         </div>
         <div class="field">
-          <label for="injuryDate">Date of injury</label>
+          <label for="injuryDate" id="injuryDateLabel">Date of injury</label>
           <input type="date" id="injuryDate">
         </div>
         <div class="field recheck-only">
@@ -380,9 +397,37 @@
       </div>
     </section>
 
+    <!-- ============ EXAM (OBJECTIVE) ============ -->
+    <section class="card">
+      <h2>Exam (Objective)</h2>
+      <div class="row">
+        <label class="check"><input type="checkbox" id="includeExam" checked>
+          Include an Objective section with the standard normal-exam template for the selected body parts</label>
+      </div>
+      <div class="row">
+        <div class="field grow">
+          <label for="examExtra">Additional / abnormal findings <span class="hint">— one per line, added under the templated exam</span></label>
+          <div class="ta-wrap">
+            <textarea id="examExtra" rows="2" placeholder="e.g. Positive Finkelstein test on the right"></textarea>
+            <button type="button" class="mic" data-mic="examExtra" title="Dictate">🎤</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- ============ PLAN & WORK STATUS ============ -->
     <section class="card">
-      <h2>Today's plan &amp; work status</h2>
+      <h2>Assessment, plan &amp; work status</h2>
+
+      <div class="row">
+        <div class="field grow">
+          <label for="diagnosis">Diagnosis / clinical impression</label>
+          <div class="ta-wrap">
+            <textarea id="diagnosis" rows="2" placeholder="e.g. Right de Quervain's tenosynovitis / repetitive strain injury"></textarea>
+            <button type="button" class="mic" data-mic="diagnosis" title="Dictate">🎤</button>
+          </div>
+        </div>
+      </div>
 
       <div class="row">
         <fieldset class="field grow">
@@ -408,6 +453,7 @@
             <label class="check"><input type="checkbox" id="rLadders"> No climbing ladders</label>
             <label class="check"><input type="checkbox" id="rSitStand"> May alternate sitting and standing as needed</label>
             <label class="check"><input type="checkbox" id="rSeated"> Seated work only</label>
+            <label class="check"><input type="checkbox" id="rStretch"> 5–7 minute stretch/microbreak each hour</label>
           </div>
           <div class="ta-wrap" style="margin-top:6px">
             <textarea id="rOther" rows="2" placeholder="Other restrictions — one per line"></textarea>
@@ -468,6 +514,22 @@
 
       <div class="row">
         <div class="field grow">
+          <label for="treatmentToday">Treatment &amp; recommendations today</label>
+          <div class="chips" data-append="treatmentToday">
+            <button type="button" class="chip">5–7 minute stretch/microbreak each hour</button>
+            <button type="button" class="chip">Ice 15–20 minutes several times daily</button>
+            <button type="button" class="chip">Home exercise program provided</button>
+            <button type="button" class="chip">Activity modification reviewed</button>
+          </div>
+          <div class="ta-wrap" style="margin-top:6px">
+            <textarea id="treatmentToday" rows="2" placeholder="One per line — leave blank if none"></textarea>
+            <button type="button" class="mic" data-mic="treatmentToday" title="Dictate">🎤</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="field grow">
           <label for="referrals">Referrals / orders requested today</label>
           <div class="chips" data-append="referrals">
             <button type="button" class="chip">Physical therapy — eval &amp; treat</button>
@@ -504,6 +566,10 @@
           <label for="followUpCustom">Follow-up date</label>
           <input type="date" id="followUpCustom">
         </div>
+      </div>
+      <div class="row">
+        <label class="check"><input type="checkbox" id="rfAdvice" checked>
+          Add "return sooner for worsening pain, swelling, numbness/tingling, weakness, or decreased function"</label>
       </div>
     </section>
 
@@ -828,6 +894,7 @@ function gather() {
   if ($('rLadders').checked) restrictions.push('No climbing ladders');
   if ($('rSitStand').checked) restrictions.push('May alternate sitting and standing as needed');
   if ($('rSeated').checked) restrictions.push('Seated work only');
+  if ($('rStretch').checked) restrictions.push('5–7 minute stretch/microbreak each hour');
   restrictions.push(...lines($('rOther').value));
 
   return {
@@ -837,6 +904,14 @@ function gather() {
     client: $('clientSelect').value.trim(),
     employee: $('employeeName').value.trim(),
     pn: PRONOUNS[$('pronouns').value] || PRONOUNS.they,
+    jobTitle: $('jobTitle').value.trim(),
+    employedSince: $('employedSince').value.trim(),
+    onsetType: $('onsetType').value,
+    includeExam: $('includeExam').checked,
+    examExtra: lines($('examExtra').value),
+    dxLine: lines($('diagnosis').value).join('; '),
+    treatment: lines($('treatmentToday').value),
+    rfAdvice: $('rfAdvice').checked,
     visitDate, injuryDate, lastVisitDate,
     cc: $('chiefComplaint').value.trim(),
     bodyParts: bodyParts.slice(),
@@ -858,146 +933,222 @@ function gather() {
   };
 }
 
-/* ---------------- note builders ---------------- */
-function headerBlock(d, title) {
-  const out = [];
-  out.push(title);
-  out.push('='.repeat(title.length));
+/* ---------------- note builders (SOAP format) ---------------- */
+const dot = s => /[.!?]$/.test(s) ? s : s + '.';
+const stripDot = s => s.replace(/[.\s]+$/, '');
+const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June',
+                'July', 'August', 'September', 'October', 'November', 'December'];
+function fmtMonthYear(d) { return MONTHS[d.getMonth()] + ' ' + d.getFullYear(); }
+function durationPhrase(from, to) {
+  const days = daysBetween(from, to);
+  if (days <= 0) return null;
+  if (days < 14) return 'approximately ' + days + (days === 1 ? ' day' : ' days');
+  if (days < 56) return 'approximately ' + Math.round(days / 7) + ' weeks';
+  const m = Math.round(days / 30.44);
+  return 'approximately ' + m + (m === 1 ? ' month' : ' months');
+}
+function onsetLabel(d) {
+  return d.onsetType === 'cumulative'
+    ? (d.injuryDate ? 'approximately ' + fmtMonthYear(d.injuryDate) : '[approximate onset]')
+    : (fmtDate(d.injuryDate) || '[date of injury]');
+}
+
+function headerBlock(d) {
+  const title = d.visitType === 'initial'
+    ? 'WORK COMP PROGRESS NOTE — NEW INJURY' + (d.onsetType === 'cumulative' ? ' / REPETITIVE STRAIN' : '')
+    : 'WORK COMP PROGRESS NOTE — RECHECK';
+  const out = [title, '='.repeat(title.length)];
   if (d.clinic) out.push(d.clinic);
   out.push('');
   out.push('Date of visit:   ' + (fmtDate(d.visitDate) || '[date of visit]'));
   out.push('Employee:        ' + (d.employee || '[employee name]'));
+  if (d.jobTitle) out.push('Job title:       ' + d.jobTitle);
   out.push('Employer:        ' + (d.client || '[client / employer]'));
-  out.push('Date of injury:  ' + (fmtDate(d.injuryDate) || '[date of injury]'));
+  out.push((d.onsetType === 'cumulative' ? 'Symptom onset:   ' : 'Date of injury:  ') + onsetLabel(d));
   if (d.visitType === 'recheck') out.push('Last visit:      ' + (fmtDate(d.lastVisitDate) || '[date of last visit]'));
   return out;
 }
 
-function planBlock(d) {
-  const out = [];
-  const dot = s => /[.!?]$/.test(s) ? s : s + '.';
-  out.push('PLAN');
-  if (d.meds.length) out.push(dot('Medications dispensed/prescribed: ' + d.meds.join('; ')));
-  if (d.dme.length) out.push(dot('DME dispensed: ' + d.dme.join('; ')));
-  if (d.referrals.length) out.push(dot('Referrals/orders requested: ' + d.referrals.join('; ')));
-  if (!d.meds.length && !d.dme.length && !d.referrals.length) out.push('No medications, DME, or referrals today.');
+function subjectiveBlock(d) {
+  const p = d.pn;
+  const name = d.employee || 'The patient';
+  const out = ['SUBJECTIVE (HPI)'];
+  const p1 = [];
 
-  if (d.workStatus === 'full') {
-    out.push('Work status: released to full duty without restrictions.');
-  } else if (d.workStatus === 'modified') {
-    out.push('Work status: modified duty with the following restrictions:');
-    if (d.restrictions.length) d.restrictions.forEach(r => out.push('  - ' + r));
-    else out.push('  - [no restrictions entered]');
-  } else if (d.followUpDate) {
-    out.push('Work status: off work through ' + fmtDate(d.followUpDate) + '.');
-  } else {
-    out.push('Work status: off work' + (d.discharged ? '' : ', to be re-evaluated at the next visit') + '.');
+  if (d.visitType === 'recheck') {
+    let s1 = name + ' returns for a recheck of ' + p.poss + ' work-related ' +
+             (d.onsetType === 'cumulative' ? 'repetitive strain injury' : 'injury');
+    if (d.bodyParts.length) s1 += ' involving the ' + listSentence(d.bodyParts);
+    if (d.onsetType === 'cumulative') { if (d.injuryDate) s1 += ', with symptoms since ' + onsetLabel(d); }
+    else if (d.injuryDate) s1 += ' sustained on ' + fmtDate(d.injuryDate);
+    if (d.client) s1 += ', while working for ' + d.client + (d.jobTitle ? ' as a ' + d.jobTitle : '');
+    s1 += '.';
+    p1.push(s1);
+    if (d.cc) p1.push(sentenceCase(d.cc));
+    if (d.intervalHistory) p1.push('Since the last visit' + (d.lastVisitDate ? ' on ' + fmtDate(d.lastVisitDate) : '') + ': ' + sentenceCase(d.intervalHistory));
+    if (d.pain !== '') p1.push(cap(p.subj) + ' rate' + p.s + ' the pain today at ' + d.pain + '/10.');
+    out.push(p1.join(' '));
+    return out;
   }
 
-  if (d.firstAid === 'yes') out.push('This injury meets first aid criteria.');
-  else if (d.firstAid === 'no') out.push('This injury does not meet first aid criteria.');
-
-  if (d.discharged) out.push('Follow-up: none — discharged from care today.');
-  else if (d.followUpDate) {
-    const inDays = d.visitDate ? daysBetween(d.visitDate, d.followUpDate) : null;
-    out.push('Follow-up: return to clinic on ' + fmtDate(d.followUpDate) + (inDays && inDays > 0 ? ' (in ' + inDays + (inDays === 1 ? ' day' : ' days') + ')' : '') + '.');
+  if (d.onsetType === 'cumulative') {
+    let s1 = name + ' works' + (d.jobTitle ? ' as a ' + d.jobTitle : '') + (d.client ? ' at ' + d.client : '');
+    if (d.employedSince) s1 += ' and has been employed there since approximately ' + d.employedSince;
+    s1 += '.';
+    p1.push(s1);
+    p1.push(cap(p.subj) + ' report' + p.s + ' developing symptoms involving the ' +
+      (d.bodyParts.length ? listSentence(d.bodyParts) : '[body parts]') +
+      (d.injuryDate ? ' around ' + fmtMonthYear(d.injuryDate) : '') +
+      ' without a single discrete traumatic event.');
+    if (d.injuryDate && d.visitDate) {
+      const dur = durationPhrase(d.injuryDate, d.visitDate);
+      if (dur) p1.push('Symptoms have persisted for ' + dur + '.');
+    }
   } else {
-    out.push('Follow-up: [follow-up date]');
+    let s1 = name + ' presents for initial evaluation of a work-related injury sustained';
+    if (d.injuryDate) {
+      s1 += ' on ' + fmtDate(d.injuryDate);
+      const n = d.visitDate ? daysBetween(d.injuryDate, d.visitDate) : null;
+      const ago = n === null ? null : agoPhrase(n);
+      if (ago) s1 += ' (' + ago + ')';
+    } else {
+      s1 += ' on [date of injury]';
+    }
+    if (d.client) s1 += ' while working for ' + d.client + (d.jobTitle ? ' as a ' + d.jobTitle : '');
+    else if (d.jobTitle) s1 += ' while working as a ' + d.jobTitle;
+    s1 += '.';
+    p1.push(s1);
+    if (d.bodyParts.length) p1.push(cap(p.subj) + ' report' + p.s + ' symptoms involving the ' + listSentence(d.bodyParts) + '.');
   }
+  if (d.cc) p1.push(sentenceCase(d.cc));
+  if (d.pain !== '') p1.push(cap(p.subj) + ' rate' + p.s + ' the pain today at ' + d.pain + '/10.');
+  out.push(p1.join(' '));
+
+  const p2 = [];
+  if (d.sinceInjury) p2.push((d.onsetType === 'cumulative' ? 'Since symptoms began: ' : 'Since the day of injury: ') + sentenceCase(d.sinceInjury));
+  // only meaningful when the visit is more than a day after the injury (mirrors the form)
+  const gap = (d.visitDate && d.injuryDate) ? daysBetween(d.injuryDate, d.visitDate) : null;
+  if (d.onsetType === 'cumulative' || (gap !== null && gap > 1)) {
+    const tail = d.onsetType === 'cumulative' ? '' : ' since the injury';
+    if (d.workedSince === 'full') p2.push(cap(p.subj) + ' ' + p.have + ' continued working full duty' + tail + '.');
+    else if (d.workedSince === 'modified') p2.push(cap(p.subj) + ' ' + p.have + ' been working modified duty' + tail + '.');
+    else if (d.workedSince === 'no') p2.push(cap(p.subj) + ' ' + p.have + ' not worked' + tail + '.');
+  }
+  if (p2.length) { out.push(''); out.push(p2.join(' ')); }
   return out;
 }
 
-function buildInitialNote(d) {
-  const p = d.pn;
-  const name = d.employee || 'The patient';
-  const out = headerBlock(d, 'WORK INJURY — INITIAL VISIT');
-  out.push('');
-
-  out.push('CHIEF COMPLAINT');
-  out.push(d.cc ? sentenceCase(d.cc)
-                : (d.bodyParts.length ? sentenceCase('Injury involving the ' + listSentence(d.bodyParts)) : '[chief complaint]'));
-  out.push('');
-
-  out.push('HISTORY OF PRESENT ILLNESS');
-  const hpi = [];
-  let s1 = name + ' presents for initial evaluation of a work-related injury sustained';
-  if (d.injuryDate) {
-    s1 += ' on ' + fmtDate(d.injuryDate);
-    const n = d.visitDate ? daysBetween(d.injuryDate, d.visitDate) : null;
-    const ago = n === null ? null : agoPhrase(n);
-    if (ago) s1 += ' (' + ago + ')';
-  } else {
-    s1 += ' on [date of injury]';
-  }
-  if (d.client) s1 += ' while working for ' + d.client;
-  s1 += '.';
-  hpi.push(s1);
-  if (d.bodyParts.length) hpi.push(cap(p.subj) + ' report' + p.s + ' symptoms involving the ' + listSentence(d.bodyParts) + '.');
-  if (d.pain !== '') hpi.push(cap(p.subj) + ' rate' + p.s + ' the pain today at ' + d.pain + '/10.');
-  if (d.sinceInjury) hpi.push('Since the day of injury: ' + sentenceCase(d.sinceInjury));
-  // only meaningful when the visit is more than a day after the injury (mirrors the form)
-  const gap = (d.visitDate && d.injuryDate) ? daysBetween(d.injuryDate, d.visitDate) : null;
-  if (gap !== null && gap > 1) {
-    if (d.workedSince === 'full') hpi.push(cap(p.subj) + ' ' + p.have + ' continued working full duty since the injury.');
-    else if (d.workedSince === 'modified') hpi.push(cap(p.subj) + ' ' + p.have + ' been working modified duty since the injury.');
-    else if (d.workedSince === 'no') hpi.push(cap(p.subj) + ' ' + p.have + ' not worked since the injury.');
-  }
-  out.push(hpi.join(' '));
-  out.push('');
-
-  out.push(...planBlock(d));
-  return out.join('\n');
-}
-
-function buildRecheckNote(d) {
-  const p = d.pn;
-  const name = d.employee || 'The patient';
-  const out = headerBlock(d, 'WORK INJURY — RECHECK VISIT');
-  out.push('');
-
-  if (d.cc) {
-    out.push('CHIEF COMPLAINT');
-    out.push(sentenceCase(d.cc));
-    out.push('');
-  }
-
-  out.push('INTERVAL HISTORY');
-  const ih = [];
-  let s1 = name + ' returns for a recheck of ' + p.poss + ' work-related injury';
-  if (d.bodyParts.length) s1 += ' involving the ' + listSentence(d.bodyParts);
-  if (d.injuryDate) s1 += ' sustained on ' + fmtDate(d.injuryDate);
-  if (d.client) s1 += ' while working for ' + d.client;
-  s1 += '.';
-  ih.push(s1);
-  if (d.intervalHistory) {
-    ih.push('Since the last visit' + (d.lastVisitDate ? ' on ' + fmtDate(d.lastVisitDate) : '') + ': ' + sentenceCase(d.intervalHistory));
-  }
-  if (d.pain !== '') ih.push(cap(p.subj) + ' rate' + p.s + ' the pain today at ' + d.pain + '/10.');
-  out.push(ih.join(' '));
-  out.push('');
-
+function recheckHistoryBlocks(d) {
+  const out = [];
   if (d.orders.length) {
     out.push('ORDERS FROM LAST VISIT');
     for (const o of d.orders) {
-      const label = o.status === 'pending' ? 'pending authorization' : o.status;
-      out.push('  - ' + o.text + ' — ' + label);
+      out.push('  - ' + o.text + ' — ' + (o.status === 'pending' ? 'pending authorization' : o.status));
     }
     out.push('');
   }
-
   if (d.therapy.length) {
     out.push('THERAPY SESSIONS');
     for (const t of d.therapy) out.push('  - ' + therapyLine(t));
     out.push('');
   }
-
   if (d.specialist) {
     out.push('SPECIALIST CARE SINCE LAST VISIT');
     out.push(sentenceCase(d.specialist));
     out.push('');
   }
+  return out;
+}
 
-  out.push(...planBlock(d));
+function objectiveBlock(d) {
+  if (!d.includeExam) return [];
+  const region = d.bodyParts.length ? listSentence(d.bodyParts) : 'affected area';
+  const out = [
+    'OBJECTIVE',
+    "The patient's HPI, PMFSH, and ROS were reviewed by the provider prior to examination. " +
+    "Relevant chronic conditions and comorbidities that could exacerbate, prolong, or complicate today's symptoms " +
+    'were considered and addressed as appropriate. The patient was advised to follow up with their PCP for ' +
+    'evaluation and management of any non-industrial or chronic medical conditions/symptoms.',
+    '',
+    'CONSTITUTIONAL:',
+    '  - No acute distress. Vital signs stable.',
+    'NEUROLOGICAL:',
+    '  - Alert and oriented. No focal neurologic deficits noted.',
+    '  - Distal sensation grossly intact.',
+    'SKIN:',
+    '  - No erythema, ecchymosis, rash, or open wound over the ' + region + '.',
+    'MUSCULOSKELETAL — ' + (d.bodyParts.length ? d.bodyParts.join(', ').toUpperCase() : 'AFFECTED AREA') + ':',
+    '  - Inspection: No gross deformity. No significant swelling.',
+    '  - Palpation: Tenderness over the ' + region + '.',
+    '  - ROM: Grossly functional, with pain on use of the ' + region + '.',
+    '  - Strength: Grossly preserved.',
+    '  - Neurovascular: Intact distally.',
+  ];
+  if (d.dxLine) out.push('  - Provocative testing: Findings clinically consistent with ' + stripDot(d.dxLine) + '.');
+  if (d.examExtra.length) {
+    out.push('ADDITIONAL FINDINGS:');
+    d.examExtra.forEach(l => out.push('  - ' + dot(l)));
+  }
+  out.push('');
+  return out;
+}
+
+function treatmentBlock(d) {
+  const out = ['TREATMENT TODAY'];
+  const asIs = (l, verb, verbs) => (/[.!?]$/.test(l) || verbs.test(l)) ? l : l + ' ' + verb;
+  d.dme.forEach(l => out.push('  - ' + dot(asIs(l, 'provided', /provided|dispensed|applied|fitted/i))));
+  d.meds.forEach(l => out.push('  - ' + dot(asIs(l, 'dispensed', /provided|dispensed|prescribed|started/i))));
+  d.treatment.forEach(l => out.push('  - ' + dot(l)));
+  d.referrals.forEach(l => out.push('  - ' + dot(/^(recommend|refer)/i.test(l) ? l : 'Referral requested: ' + l)));
+  if (out.length === 1) out.push('  - Supportive care and activity guidance discussed. No medications or DME dispensed today.');
+  return out;
+}
+
+function assessmentBlock(d) {
+  const out = ['ASSESSMENT / PLAN SUMMARY'];
+  const parts = d.bodyParts.length ? listSentence(d.bodyParts) : null;
+  const injWord = d.onsetType === 'cumulative' ? 'repetitive strain injury' : 'work-related injury';
+  let b1 = (d.employee || 'The patient') + ' presents with a ' + injWord + (parts ? ' involving the ' + parts : '');
+  if (d.dxLine) b1 += ', clinically consistent with ' + stripDot(d.dxLine);
+  out.push('  - ' + b1 + '.');
+  const provided = [...d.dme, ...d.meds];
+  if (provided.length) out.push('  - ' + dot('Provided today: ' + provided.map(stripDot).join('; ')));
+  if (d.treatment.length) out.push('  - ' + dot(d.treatment.map(stripDot).join('; ')));
+  if (d.referrals.length) out.push('  - ' + dot('Referrals/orders requested: ' + d.referrals.map(stripDot).join('; ')));
+  out.push('');
+  out.push('Diagnosis: ' + (d.dxLine ? dot(d.dxLine) : '[diagnosis]'));
+  if (d.workStatus === 'full') {
+    out.push('Work Status: Usual and customary duties (full duty).');
+  } else if (d.workStatus === 'modified') {
+    out.push('Work Status: Modified duty — ' + (d.restrictions.length ? d.restrictions.map(stripDot).join('; ') : '[no restrictions entered]') + '.');
+  } else {
+    out.push('Work Status: Off work' + (d.followUpDate ? ' through ' + fmtDate(d.followUpDate) : '') + '.');
+  }
+  if (d.discharged) {
+    out.push('Follow-up: none — discharged from care today.');
+  } else if (d.followUpDate) {
+    const inDays = d.visitDate ? daysBetween(d.visitDate, d.followUpDate) : null;
+    let fu = 'Follow-up: ' + fmtDate(d.followUpDate) + (inDays && inDays > 0 ? ' (in ' + inDays + (inDays === 1 ? ' day' : ' days') + ')' : '');
+    if (d.rfAdvice) fu += '; sooner for worsening pain, swelling, numbness/tingling, weakness, or decreased function';
+    out.push(fu + '.');
+  } else {
+    out.push('Follow-up: [follow-up date]');
+  }
+  if (d.firstAid === 'yes') out.push('Disposition: First aid.');
+  else if (d.firstAid === 'no') out.push("Disposition: Workers' compensation claim.");
+  return out;
+}
+
+function buildNote(d) {
+  const out = headerBlock(d);
+  out.push('');
+  out.push(...subjectiveBlock(d));
+  out.push('');
+  if (d.visitType === 'recheck') out.push(...recheckHistoryBlocks(d));
+  out.push(...objectiveBlock(d));
+  out.push(...treatmentBlock(d));
+  out.push('');
+  out.push(...assessmentBlock(d));
   return out.join('\n');
 }
 
@@ -1017,8 +1168,9 @@ function buildWorkStatus(d) {
   out.push('');
   out.push('Date:            ' + (fmtDate(d.visitDate) || '[date of visit]'));
   out.push('Employee:        ' + (d.employee || '[employee name]'));
+  if (d.jobTitle) out.push('Job title:       ' + d.jobTitle);
   out.push('Employer:        ' + (d.client || '[client / employer]'));
-  out.push('Date of injury:  ' + (fmtDate(d.injuryDate) || '[date of injury]'));
+  out.push((d.onsetType === 'cumulative' ? 'Symptom onset:   ' : 'Date of injury:  ') + onsetLabel(d));
   out.push('Visit type:      ' + (d.visitType === 'initial' ? 'Initial visit' : 'Follow-up / recheck'));
   out.push('');
 
@@ -1026,7 +1178,7 @@ function buildWorkStatus(d) {
   const from = fmtDate(d.visitDate) || '[date of visit]';
   const through = d.followUpDate ? fmtDate(d.followUpDate) : null;
   if (d.workStatus === 'full') {
-    out.push('May work FULL DUTY without restrictions as of ' + from + '.');
+    out.push('May work USUAL AND CUSTOMARY DUTIES (full duty) without restrictions as of ' + from + '.');
   } else if (d.workStatus === 'modified') {
     out.push('May work MODIFIED DUTY ' + (through ? 'from ' + from + ' through ' + through : 'as of ' + from) + ' with the following restrictions:');
     if (d.restrictions.length) d.restrictions.forEach(r => out.push('  • ' + r));
@@ -1077,7 +1229,9 @@ function regen() {
 
   // "working since injury" only matters when the visit is >1 day after the injury
   const gap = (d.visitDate && d.injuryDate) ? daysBetween(d.injuryDate, d.visitDate) : null;
-  $('workedSinceBlock').classList.toggle('hidden', !(d.visitType === 'initial' && gap !== null && gap > 1));
+  $('workedSinceBlock').classList.toggle('hidden',
+    !(d.visitType === 'initial' && (d.onsetType === 'cumulative' || (gap !== null && gap > 1))));
+  $('injuryDateLabel').textContent = d.onsetType === 'cumulative' ? 'Approx. symptom onset' : 'Date of injury';
 
   // restrictions only for modified duty
   $('restrictionsBlock').classList.toggle('hidden', d.workStatus !== 'modified');
@@ -1094,7 +1248,7 @@ function regen() {
   $('dateWarnings').classList.toggle('hidden', !warns.length);
   $('firstAidWarn').classList.toggle('hidden', !(d.firstAid === 'yes' && (d.workStatus !== 'full' || d.referrals.length > 0)));
 
-  $('noteOut').textContent = d.visitType === 'initial' ? buildInitialNote(d) : buildRecheckNote(d);
+  $('noteOut').textContent = buildNote(d);
   $('statusOut').textContent = buildWorkStatus(d);
 }
 
@@ -1237,15 +1391,19 @@ function restoreDraft() {
 function clearForm() {
   try { sessionStorage.removeItem(DRAFT_KEY); } catch (e) {}
   // keep: clinic/provider (prefs), client list; reset everything patient-specific
-  ['employeeName', 'chiefComplaint', 'sinceInjury', 'intervalHistory', 'specialistSeen',
-   'rOther', 'medsDispensed', 'dmeDispensed', 'referrals', 'injuryDate', 'lastVisitDate',
-   'followUpCustom', 'partCustom'].forEach(id => { $(id).value = ''; });
+  ['employeeName', 'jobTitle', 'employedSince', 'chiefComplaint', 'sinceInjury', 'intervalHistory',
+   'specialistSeen', 'diagnosis', 'examExtra', 'treatmentToday', 'rOther', 'medsDispensed',
+   'dmeDispensed', 'referrals', 'injuryDate', 'lastVisitDate', 'followUpCustom', 'partCustom']
+    .forEach(id => { $(id).value = ''; });
   $('clientSelect').value = '';
   $('pronouns').value = 'they';
   $('painLevel').value = '';
   $('followUp').value = '7';
-  ['rLift', 'rOverhead', 'rRepetitive', 'rSplint', 'rKneel', 'rLadders', 'rSitStand', 'rSeated']
+  ['rLift', 'rOverhead', 'rRepetitive', 'rSplint', 'rKneel', 'rLadders', 'rSitStand', 'rSeated', 'rStretch']
     .forEach(id => { $(id).checked = false; });
+  $('onsetType').value = 'incident';
+  $('includeExam').checked = true;
+  $('rfAdvice').checked = true;
   $('rLiftLbs').value = 10;
   setRadio('workedSince', ''); setRadio('workStatus', 'full'); setRadio('firstAid', '');
   bodyParts = [];

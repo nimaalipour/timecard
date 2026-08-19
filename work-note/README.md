@@ -19,18 +19,27 @@ uploaded anywhere.
    per line (commas in names like "Acme, Inc." are kept), or add them one at
    a time. The list is saved in the browser and is there next time.
 3. Fill or **dictate** (🎤 on each text box, in Chrome/Edge/Safari) the history:
+   - job title, employed-since, and the **injury type** — a specific incident
+     (with a date of injury) or **cumulative / repetitive strain** (with an
+     approximate onset, phrased "without a single discrete traumatic event");
    - chief complaint(s), body parts (tap-to-pick with left/right/bilateral),
-     date of injury, pain level;
-   - *initial visit*: what's been done since the day of injury, and — only when
-     the visit is more than a day after the injury — whether the employee has
-     been working since;
+     pain level;
+   - *initial visit*: what's been done since the day of injury, and whether
+     the employee has been working since (shown when the visit is more than a
+     day after the injury, or always for cumulative injuries);
    - *recheck*: what's been going on since the last visit, each order from the
      last visit with its status (approved / not approved / pending
      authorization), PT/acupuncture/chiro sessions completed vs. authorized,
      and any specialist seen between visits.
-4. **Today's plan & work status** — full/modified/off work with restriction
-   checkboxes, first aid yes/no, medications and DME dispensed, referrals
-   requested, and the follow-up interval (or a custom date, or discharge).
+4. **Exam & plan** — the note is a full SOAP progress note: an Objective
+   section with the standard review paragraph and a normal-exam template
+   built from the selected body parts (toggleable, with a field for
+   additional findings), a diagnosis / clinical impression, Treatment Today
+   (meds, DME, recommendations like hourly stretch breaks), referrals,
+   full/modified/off work with restriction checkboxes, first aid yes/no, and
+   the follow-up interval (or a custom date, or discharge) with optional
+   "return sooner if worse" advice. The Assessment/Plan Summary ends with
+   labeled Diagnosis / Work Status / Follow-up / Disposition lines.
 5. The **Work Note** and **Work Status** tabs on the right update live —
    **Copy to clipboard** for the EMR, **Print** for the employer copy
    (the in-app button and the browser's own Ctrl+P both print just the
@@ -57,8 +66,10 @@ Dragon) keeps everything on the device.
 
 ## Changing the templates
 
-All of the generated wording lives in three small functions near the bottom of
-`index.html`: `buildInitialNote`, `buildRecheckNote`, and `buildWorkStatus` —
-plain string assembly, one line per sentence, easy to reword. The quick-pick
-chips (common medications, DME, referrals, restrictions, body parts) are plain
+All of the generated wording lives in small functions near the bottom of
+`index.html`: `buildNote` assembles the SOAP note from `headerBlock`,
+`subjectiveBlock`, `objectiveBlock`, `treatmentBlock`, and `assessmentBlock`,
+and `buildWorkStatus` produces the employer report — plain string assembly,
+one line per sentence, easy to reword. The quick-pick chips (common
+medications, DME, referrals, treatments, restrictions, body parts) are plain
 lists in the HTML/JS and are just as easy to extend.
