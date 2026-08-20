@@ -16,3 +16,8 @@
   for = "/voice/*"
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/triangle-race/voice/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
