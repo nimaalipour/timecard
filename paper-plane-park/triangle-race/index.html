@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#5fb7e8">
+<title>Triangle Sky Race</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#128314;</text></svg>">
+</head>
+<body>
+
+<noscript>
+  <p style="font-family:sans-serif;max-width:34em;margin:3em auto;text-align:center">
+    This game needs JavaScript &mdash; if you are seeing this in an email or file
+    preview, open the file in Safari or Chrome to play.
+  </p>
+</noscript>
+
+<canvas id="scene"></canvas>
+
+<!-- ============ HUD ============ -->
+<header id="hud" class="hud hidden">
+  <div class="hud-pill">
+    <span class="hud-label">Question</span>
+    <span id="hudQ" class="hud-value">1/10</span>
+  </div>
+  <div class="hud-pill">
+    <span class="hud-label">Lives</span>
+    <span id="hudLives" class="hud-value hud-hearts">&#10084;&#65039;&#10084;&#65039;&#10084;&#65039;</span>
+  </div>
+  <div class="hud-pill hud-pill--wide">
+    <span class="hud-label">Distance</span>
+    <span id="hudTotal" class="hud-value">0 ft</span>
+  </div>
+  <button id="voiceBtn" class="icon-btn" type="button" aria-label="Turn read-aloud off" aria-pressed="true">
+    <span id="voiceIcon">&#128483;&#65039;</span>
+  </button>
+  <button id="muteBtn" class="icon-btn" type="button" aria-label="Turn sound off" aria-pressed="true">
+    <span id="muteIcon">&#128266;</span>
+  </button>
+</header>
+
+<div id="placeTag" class="place-tag hidden" aria-hidden="true"></div>
+
+<!-- ============ LIVE DISTANCE ============ -->
+<div id="flyMeter" class="fly-meter hidden">
+  <div id="flyDistance" class="fly-distance">0 ft</div>
+</div>
+
+<!-- ============ START SCREEN ============ -->
+<section id="startScreen" class="panel">
+  <div class="card card--start">
+    <div class="plane-badge">&#128314;</div>
+    <h1>Triangle Sky Race</h1>
+    <p class="subtitle">Ten triangle questions, one paper plane, one finish line
+      350 feet away. Right answers soar &mdash; wrong answers barely hop.</p>
+
+    <div class="plaque">
+      <p class="plaque-line">This game is made exclusively for</p>
+      <p class="plaque-name">Grayson Alipour</p>
+      <p class="plaque-credits">Creator: Dada (Nima Alipour)</p>
+    </div>
+
+    <label class="pilot-label" for="pilotName">Who is racing today?</label>
+    <input id="pilotName" class="pilot-input" type="text" maxlength="20"
+           autocomplete="off" autocapitalize="words" spellcheck="false" value="Grayson">
+
+    <button id="startBtn" class="btn btn--big" type="button">Let&rsquo;s Race!</button>
+    <p id="bestLine" class="best-line hidden"></p>
+    <p class="hint">Tip: you can also press <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> <kbd>4</kbd> to pick an answer.<br>
+      You get <strong>3 lives</strong> &mdash; it takes <strong>7 right answers</strong> to reach the finish line.</p>
+  </div>
+</section>
+
+<!-- ============ HOW TO RACE ============ -->
+<section id="howScreen" class="panel hidden">
+  <div class="card card--how">
+    <div class="plane-badge">&#127937;</div>
+    <h2>How to Race</h2>
+    <div id="howList" class="how-list"></div>
+    <button id="gotItBtn" class="btn btn--big" type="button">Got it &mdash; let&rsquo;s race!</button>
+  </div>
+</section>
+
+<!-- ============ QUESTION SCREEN ============ -->
+<section id="questionScreen" class="panel hidden">
+  <div class="card card--question">
+    <div class="q-number"><span id="qPlace">Question 1 of 10</span></div>
+    <p id="qStory" class="story"></p>
+    <h2 id="qText">Question</h2>
+    <div id="qChoices" class="choices"></div>
+  </div>
+</section>
+
+<!-- ============ WIN SCREEN ============ -->
+<section id="winScreen" class="panel hidden">
+  <div class="card card--result">
+    <div class="plane-badge">&#127942;</div>
+    <h2 id="winTitle">You crossed the finish line!</h2>
+    <div class="score-box">
+      <span id="winScoreLabel" class="score-label">Total distance</span>
+      <span id="winDistance" class="score-value">350 ft</span>
+    </div>
+    <p id="winMessage" class="subtitle"></p>
+    <div class="journey-wrap">
+      <p class="journey-title">Your race, question by question</p>
+      <ol id="winJourney" class="journey"></ol>
+    </div>
+    <div id="winBest" class="best-line"></div>
+    <button id="winAgainBtn" class="btn btn--big" type="button">Race Again</button>
+  </div>
+</section>
+
+<!-- ============ GAME OVER SCREEN ============ -->
+<section id="loseScreen" class="panel hidden">
+  <div class="card card--result">
+    <div class="plane-badge">&#128168;</div>
+    <h2 id="loseTitle">The Race Is Over</h2>
+    <p id="loseMessage" class="subtitle"></p>
+    <div class="journey-wrap">
+      <p class="journey-title">Your race, question by question</p>
+      <ol id="loseJourney" class="journey"></ol>
+    </div>
+    <button id="loseAgainBtn" class="btn btn--big" type="button">Try Again</button>
+  </div>
+</section>
+
+<script src="voicepack.js"></script>
+<script src="content.js"></script>
+<script src="game.js"></script>
+</body>
+</html>

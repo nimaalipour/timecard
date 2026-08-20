@@ -1,5 +1,9 @@
 # Paper Plane Park ✈️
 
+> This repo also holds a second game — **[Triangle Sky Race 🔺](#triangle-sky-race-)**,
+> a triangle math race built on the same park, plane and narrator. It lives in
+> `paper-plane-park/triangle-race/` and deploys alongside the park at `/triangle-race/`.
+
 A gentle browser game made for **Grayson Alipour** (7). One evening in Grace Park,
 one paper plane, and ten questions about a brave school day. Kind, honest,
 courageous answers give the plane a bigger push — and every answer decides where
@@ -138,3 +142,60 @@ device's built-in voice, and still plays completely.
 
 After editing any question or story text, run `node paper-plane-park/make-voicepack.js`
 to record the new lines (unchanged lines are skipped), then redeploy.
+
+---
+
+# Triangle Sky Race 🔺
+
+A triangle math race built on the same park as Paper Plane Park — same paper
+plane, same warm narrator, but this time it's a quiz with a finish line. It
+lives in **`paper-plane-park/triangle-race/`** and deploys with the park at
+**`/triangle-race/`**.
+
+## How to play
+
+Open **`paper-plane-park/triangle-race/index.html`** in any browser. For a single
+shareable file, run `node paper-plane-park/triangle-race/build-standalone.js` to
+produce **`triangle-sky-race.html`** with everything (voice clips included) inlined.
+
+* Type the pilot's name on the start screen (it remembers it). The narrator says
+  the name out loud every time an answer is right — with a few different
+  celebrations: *"You're right, Grayson!"*, *"Correct, Grayson!"*,
+  *"That's right, Grayson! Great thinking!"* and more, picked at random.
+* **10 triangle questions**, read aloud like the park's stops — story, question,
+  and every numbered choice, each lighting up as it is spoken.
+* A **right answer flies the maximum: 50 ft**. A **wrong answer only hops 5 ft**,
+  and the narrator gently reads out the right answer plus a one-line explanation.
+* The **finish line is 350 ft away — exactly 7 right answers**. Cross it and the
+  race is won, under an arch of checkered flags and triangle pennants.
+* **3 lives**: a wrong answer breaks a heart, so 3 misses are okay. A fourth
+  miss ends the race early (which is also the moment 7 rights become impossible).
+* Win tiers: no misses → **Perfect Triangle Champion!**, 1–2 → **Triangle
+  Star!**, and winning on the very last question with all 3 hearts gone →
+  **Photo Finish!**
+* Same audio as the park: launch whoosh, wind, landing thump and chime,
+  birdsong, and the 🗣️ / 🔊 controls. All ~95 lines ship as pre-recorded
+  neural-voice clips in `triangle-race/voice/`; the device voice is only the
+  offline fallback. Praise lines are recorded with Grayson's name — any other
+  pilot name falls back to the device voice for just those lines.
+
+## The questions
+
+Sides and corners, spotting triangles in the world, perimeter, equilateral and
+right triangles, cutting a square into triangles, counting sides and corners of
+several triangles, and the grand finale: every triangle's angles add up to 180°.
+They live in `triangle-race/content.js` as plain text — questions, praise lines,
+miss lines, how-to-race card and endings all in one place.
+
+After editing any text, run `node paper-plane-park/triangle-race/make-voicepack.js`
+to re-record the narrator (unchanged lines are skipped), then redeploy.
+
+| File | What it is |
+| --- | --- |
+| `triangle-race/index.html` | The page and all the screens |
+| `triangle-race/styles.css` | The park styling plus quiz colors and the name box |
+| `triangle-race/content.js` | Every question and every spoken line |
+| `triangle-race/game.js` | The canvas park, the flight, lives, and the race flow |
+| `triangle-race/make-voicepack.js` | Re-records the narrator (needs `pip install edge-tts`) |
+| `triangle-race/build-standalone.js` | Bundles everything into one shareable HTML file |
+| `triangle-race/voice/` + `voicepack.js` | The recorded lines and the text→clip map |
