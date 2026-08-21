@@ -5,13 +5,14 @@ A branded, mobile-friendly wellness intake survey. One self-contained
 
 ## What it does
 
-- Walks the member through **About You** + the **eight wellness dimensions**
-  (Peptide Goals, Calm & Anxiety, Sleep, Stress, Hormones, Vitality,
-  Lifestyle, Readiness) — one section per screen, with a gold progress bar.
+- Walks the member through **About You** + the **six wellness dimensions**
+  (Peptide Goals, Calm & Anxiety, Stress, Hormones, Vitality, Lifestyle)
+  — one section per screen, with a gold progress bar.
 - Scores each dimension on the same 0–4 scale as the original score sheet
-  (symptom sections reverse-scored) and shows a **Wellness Snapshot**:
-  overall ring gauge, per-dimension bars, band labels, an auto-written
-  Care Team Summary, and key observations.
+  (symptom sections reverse-scored; overall = mean of the six dimensions)
+  and shows a **Wellness Snapshot**: overall ring gauge, per-dimension
+  bars, band labels, an auto-written Care Team Summary, and key
+  observations.
 - The Hormones section adapts to the member's sex (the perimenopause and
   erectile-change questions only appear when relevant).
 - Submits everything — contact details, every answer, and all computed

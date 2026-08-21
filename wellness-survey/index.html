@@ -284,12 +284,10 @@ input,select,textarea{font-family:inherit;color:inherit}
   <input type="text" name="overall_score">
   <input type="text" name="score_goals">
   <input type="text" name="score_calm">
-  <input type="text" name="score_sleep">
   <input type="text" name="score_stress">
   <input type="text" name="score_hormones">
   <input type="text" name="score_vitality">
   <input type="text" name="score_lifestyle">
-  <input type="text" name="score_readiness">
   <textarea name="answers_readable"></textarea>
   <textarea name="answers_json"></textarea>
   <input type="text" name="submitted_at">
@@ -317,11 +315,11 @@ input,select,textarea{font-family:inherit;color:inherit}
     </div>
 
     <h1 class="display">Your Wellness<br><em>Assessment</em></h1>
-    <p class="intro">Welcome. This brief assessment builds your personal wellness snapshot across eight dimensions — the starting point for your physician-guided plan.</p>
+    <p class="intro">Welcome. This brief assessment builds your personal wellness snapshot across six dimensions — the starting point for your physician-guided plan.</p>
 
     <div class="meta">
-      <span><i class="dot"></i>8 dimensions</span>
-      <span><i class="dot"></i>About 5 minutes</span>
+      <span><i class="dot"></i>6 dimensions</span>
+      <span><i class="dot"></i>About 4 minutes</span>
       <span><i class="dot"></i>Reviewed by your care team</span>
     </div>
 
@@ -515,18 +513,6 @@ const SECTIONS = [
     ],
   },
   {
-    id:'sleep', name:'Sleep', scale:'freq', reversed:true,
-    lead:'Over the past few weeks, how often have you experienced the following?',
-    questions:[
-      'Difficulty falling asleep',
-      'Waking up during the night or too early',
-      'Snoring, shallow sleep, or breathing concerns',
-      'Waking up unrefreshed or low on energy',
-      'Needing caffeine or stimulants to get going in the morning',
-      'Sleep problems affecting mood, focus, or performance',
-    ],
-  },
-  {
     id:'stress', name:'Stress', scale:'freq', reversed:true,
     lead:'Over the past few weeks, how often have you experienced the following?',
     questions:[
@@ -574,18 +560,6 @@ const SECTIONS = [
       'My alcohol and nicotine use is in line with my goals',
       'I’m consistent with supplements, medications, and self-care',
       'I have the time, support, or systems to follow through',
-    ],
-  },
-  {
-    id:'readiness', name:'Readiness', scale:'amount', reversed:false,
-    lead:'How ready are you to begin a physician-guided program?',
-    questions:[
-      'I’m willing to complete recommended labs and body-composition testing',
-      'I’m open to lifestyle changes alongside any therapy',
-      'I want a physician-guided rather than self-directed plan',
-      'I’m motivated to follow through for 8–12 weeks',
-      'I’m ready to invest time and attention in this process',
-      'I value a clear, personalized roadmap',
     ],
   },
 ];
@@ -752,7 +726,7 @@ function renderResults(){
   $('ringWrap').setAttribute('aria-label', `Overall wellness score ${overall} percent`);
   $('overallBand').textContent = band(overall);
   $('overallText').textContent =
-    `${first}, your overall snapshot score is ${overall}% — ${overallPhrase(overall)} for physician-guided optimization across the eight dimensions of wellness.`;
+    `${first}, your overall snapshot score is ${overall}% — ${overallPhrase(overall)} for physician-guided optimization across the six dimensions of wellness.`;
 
   // dimension bars
   const grid = $('dimGrid');
@@ -779,10 +753,8 @@ function renderResults(){
   // insights
   const ins = [];
   if(scores.goals>=70) ins.push('Strong interest in a clinician-guided peptide or longevity plan.');
-  if(scores.readiness>=80) ins.push('Readiness is high — well prepared to follow through on a structured plan.');
   if(scores.lifestyle>=85) ins.push('Excellent lifestyle foundation — habits already support an optimization program.');
   if(scores.calm<55 || scores.stress<55) ins.push('Stress or anxious tension may be affecting resilience, recovery, or consistency.');
-  if(scores.sleep<60) ins.push('Sleep quality is a meaningful opportunity and a likely early focus area.');
   if(scores.hormones<60) ins.push('Reported symptoms suggest hormone balance is worth evaluating with labs.');
   if(scores.vitality<60) ins.push('Daily energy and vitality show room to improve with a structured plan.');
   if(details.goals) ins.push(`Primary goals shared: ${details.goals}`);
@@ -824,9 +796,9 @@ function submitToNetlify(scores, overall){
     goals_text:details.goals, context_text:details.context,
     overall_score:overall+'%',
     score_goals:scores.goals+'%', score_calm:scores.calm+'%',
-    score_sleep:scores.sleep+'%', score_stress:scores.stress+'%',
+    score_stress:scores.stress+'%',
     score_hormones:scores.hormones+'%', score_vitality:scores.vitality+'%',
-    score_lifestyle:scores.lifestyle+'%', score_readiness:scores.readiness+'%',
+    score_lifestyle:scores.lifestyle+'%',
     answers_readable:readable,
     answers_json:JSON.stringify(answers),
     submitted_at:new Date().toISOString(),
