@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Peptide Lounge — Wellness Assessment</title>
+<meta name="description" content="The Peptide Lounge new-member wellness assessment. Longevity · Wellness · Precision.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%23FCF9F0'/%3E%3Crect x='12' y='22' width='40' height='6' fill='%23B5893E'/%3E%3Ccircle cx='32' cy='40' r='5' fill='%23B5893E'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --cream:#FCF9F0;
+  --parchment:#F5F0E1;
+  --charcoal:#2E2E2E;
+  --gold:#B5893E;
+  --bronze:#8F6A25;
+  --taupe:#B5A48A;
+  --stone:#8C8478;
+  --sage:#6B7B5E;
+  --card:#FFFDF7;
+  --line:rgba(181,137,62,.28);
+  --shadow:0 1px 2px rgba(46,46,46,.04), 0 8px 28px rgba(46,46,46,.07);
+  --radius:14px;
+  --sans:'Poppins',-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;
+  --serif:'Cormorant Garamond',Georgia,'Times New Roman',serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  background:var(--cream);
+  color:var(--charcoal);
+  font-family:var(--sans);
+  font-weight:400;
+  font-size:16px;
+  line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+}
+button{font-family:inherit;cursor:pointer}
+input,select,textarea{font-family:inherit;color:inherit}
+
+/* ---------- brand marks ---------- */
+.mark{display:flex;flex-direction:column;align-items:center;gap:10px;user-select:none}
+.mark .bar{width:150px;height:7px;background:var(--gold)}
+.mark .point{width:13px;height:13px;border-radius:50%;background:var(--gold)}
+.mark .wordmark{
+  margin-top:14px;
+  font-weight:500;font-size:26px;letter-spacing:.42em;text-indent:.42em;
+  color:var(--charcoal);text-align:center;line-height:1.35;
+}
+.mark .tagline{
+  font-weight:500;font-size:11.5px;letter-spacing:.34em;text-indent:.34em;
+  color:var(--gold);text-align:center;
+}
+.mark.small .bar{width:64px;height:4px}
+.mark.small .point{width:7px;height:7px}
+.mark.small .wordmark{margin-top:6px;font-size:12.5px;letter-spacing:.34em;text-indent:.34em;white-space:nowrap}
+@media(max-width:640px){
+  .topbar .mark.small .bar,.topbar .mark.small .point{display:none}
+  .topbar .mark.small .wordmark{margin-top:0;font-size:10.5px;letter-spacing:.24em;text-indent:.24em}
+  .topbar-inner{gap:10px}
+}
+.rule{width:64px;height:3px;background:var(--gold);margin:0 auto}
+
+.kicker{
+  font-size:11.5px;font-weight:500;letter-spacing:.3em;text-indent:.3em;
+  text-transform:uppercase;color:var(--gold);text-align:center;
+}
+.display{
+  font-family:var(--serif);font-weight:500;font-size:clamp(30px,5vw,42px);
+  line-height:1.18;letter-spacing:.01em;text-align:center;
+}
+.muted{color:var(--stone)}
+
+/* ---------- shell ---------- */
+.shell{max-width:760px;margin:0 auto;padding:0 22px 90px}
+.screen{display:none;animation:rise .45s ease both}
+.screen.active{display:block}
+@keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+
+/* ---------- top bar ---------- */
+.topbar{
+  position:sticky;top:0;z-index:20;
+  background:rgba(252,249,240,.92);backdrop-filter:blur(8px);
+  border-bottom:1px solid var(--line);
+  padding:14px 22px 12px;
+  display:none;
+}
+.topbar.visible{display:block}
+.topbar-inner{max-width:760px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:16px}
+.topbar .steplabel{font-size:11px;font-weight:500;letter-spacing:.24em;text-transform:uppercase;color:var(--stone);white-space:nowrap}
+.progress-track{flex:1;height:3px;background:var(--parchment);border-radius:2px;overflow:hidden;max-width:340px}
+.progress-fill{height:100%;width:0%;background:var(--gold);transition:width .45s ease}
+
+/* ---------- welcome ---------- */
+#welcome{padding-top:76px;text-align:center}
+#welcome .display{margin:44px auto 18px;max-width:560px}
+#welcome .intro{max-width:520px;margin:0 auto 8px;color:var(--charcoal)}
+#welcome .meta{
+  display:flex;justify-content:center;gap:26px;margin:30px 0 40px;
+  font-size:12px;font-weight:500;letter-spacing:.18em;text-transform:uppercase;color:var(--stone);
+  flex-wrap:wrap;
+}
+#welcome .meta span{display:flex;align-items:center;gap:8px}
+#welcome .meta .dot{width:5px;height:5px;border-radius:50%;background:var(--gold)}
+.footnote{font-size:12.5px;color:var(--stone);max-width:440px;margin:26px auto 0}
+
+/* ---------- buttons ---------- */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:10px;
+  border:none;border-radius:999px;
+  padding:15px 38px;
+  font-size:13px;font-weight:500;letter-spacing:.22em;text-indent:.22em;text-transform:uppercase;
+  transition:all .2s ease;
+}
+.btn-gold{background:var(--gold);color:var(--cream)}
+.btn-gold:hover{background:var(--bronze)}
+.btn-gold:disabled{background:var(--taupe);cursor:not-allowed;opacity:.6}
+.btn-ghost{background:transparent;color:var(--stone);border:1px solid var(--line)}
+.btn-ghost:hover{color:var(--charcoal);border-color:var(--gold)}
+.navrow{display:flex;justify-content:space-between;align-items:center;gap:14px;margin-top:38px}
+.navrow .spacer{flex:1}
+
+/* ---------- section header ---------- */
+.section-head{padding-top:46px;text-align:center;margin-bottom:34px}
+.section-head .rule{margin-top:20px}
+.section-head h2{font-family:var(--serif);font-weight:500;font-size:clamp(26px,4.4vw,34px);margin-top:14px}
+.section-head p.lead{max-width:520px;margin:12px auto 0;color:var(--stone);font-size:15px}
+
+/* ---------- details form ---------- */
+.card{
+  background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+  box-shadow:var(--shadow);padding:26px 26px;
+}
+.fields{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.field{display:flex;flex-direction:column;gap:7px}
+.field.full{grid-column:1 / -1}
+.field label{
+  font-size:11px;font-weight:500;letter-spacing:.2em;text-transform:uppercase;color:var(--bronze);
+}
+.field label .opt{color:var(--taupe);letter-spacing:.08em;text-transform:none;font-weight:400}
+.field input,.field select,.field textarea{
+  border:1px solid var(--line);border-radius:10px;background:var(--cream);
+  padding:12px 14px;font-size:15px;outline:none;transition:border-color .2s, box-shadow .2s;
+  width:100%;
+}
+.field textarea{min-height:86px;resize:vertical}
+.field input:focus,.field select:focus,.field textarea:focus{
+  border-color:var(--gold);box-shadow:0 0 0 3px rgba(181,137,62,.14);
+}
+.field input.invalid{border-color:#b0563c;background:#fdf6f2}
+.field .hint{font-size:12px;color:var(--stone)}
+@media(max-width:560px){.fields{grid-template-columns:1fr}}
+
+/* ---------- questions ---------- */
+.qlist{display:flex;flex-direction:column;gap:16px}
+.qcard{
+  background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+  box-shadow:var(--shadow);padding:22px 24px 20px;
+  transition:border-color .25s;
+  scroll-margin-top:110px;
+}
+.qcard.answered{border-color:rgba(181,137,62,.55)}
+.qcard .qnum{
+  font-size:11px;font-weight:500;letter-spacing:.22em;text-transform:uppercase;color:var(--taupe);
+  margin-bottom:6px;display:flex;align-items:center;gap:8px;
+}
+.qcard .qnum .tick{color:var(--gold);opacity:0;transition:opacity .25s}
+.qcard.answered .qnum .tick{opacity:1}
+.qcard .qtext{font-size:16.5px;font-weight:500;line-height:1.45;margin-bottom:16px}
+.choices{display:flex;gap:8px;flex-wrap:wrap}
+.choice{position:relative;flex:1;min-width:86px}
+.choice input{position:absolute;opacity:0;inset:0;width:100%;height:100%;cursor:pointer}
+.choice span{
+  display:flex;align-items:center;justify-content:center;text-align:center;
+  border:1px solid var(--line);border-radius:999px;background:var(--cream);
+  padding:10px 8px;font-size:12.5px;font-weight:500;color:var(--stone);
+  transition:all .18s ease;min-height:42px;line-height:1.25;
+}
+.choice input:hover + span{border-color:var(--gold);color:var(--charcoal)}
+.choice input:focus-visible + span{box-shadow:0 0 0 3px rgba(181,137,62,.3)}
+.choice input:checked + span{
+  background:var(--gold);border-color:var(--gold);color:var(--cream);
+  box-shadow:0 3px 10px rgba(143,106,37,.28);
+}
+@media(max-width:600px){
+  .choices{gap:6px}
+  .choice{min-width:calc(33% - 6px)}
+}
+.remaining{font-size:12.5px;color:var(--stone);text-align:right;min-width:120px}
+
+/* ---------- results ---------- */
+#results{padding-top:56px}
+.res-head{text-align:center;margin-bottom:40px}
+.res-head .display{margin:22px 0 6px}
+.res-sub{color:var(--stone);font-size:15px}
+.snapshot{
+  background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+  box-shadow:var(--shadow);
+  padding:38px 34px;
+  display:grid;grid-template-columns:auto 1fr;gap:38px;align-items:center;
+  margin-bottom:22px;
+}
+@media(max-width:640px){.snapshot{grid-template-columns:1fr;justify-items:center;text-align:center;gap:24px}}
+.ring{position:relative;width:190px;height:190px}
+.ring svg{transform:rotate(-90deg)}
+.ring .track{stroke:var(--parchment)}
+.ring .fill{stroke:var(--gold);stroke-linecap:round;transition:stroke-dashoffset 1.2s cubic-bezier(.4,0,.2,1)}
+.ring .center{
+  position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+}
+.ring .pct{font-family:var(--serif);font-weight:500;font-size:52px;line-height:1;color:var(--charcoal)}
+.ring .cap{font-size:10.5px;font-weight:500;letter-spacing:.24em;text-transform:uppercase;color:var(--gold);text-indent:.24em}
+.snapshot h3{font-family:var(--serif);font-weight:500;font-size:26px;margin-bottom:8px}
+.band-chip{
+  display:inline-block;margin-bottom:12px;
+  border:1px solid var(--gold);color:var(--bronze);border-radius:999px;
+  font-size:11px;font-weight:500;letter-spacing:.2em;text-transform:uppercase;
+  padding:5px 14px;text-indent:.2em;
+}
+.snapshot p{font-size:14.5px;color:var(--charcoal)}
+
+.dim-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:22px}
+@media(max-width:640px){.dim-grid{grid-template-columns:1fr}}
+.dim{
+  background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+  padding:18px 20px 16px;box-shadow:var(--shadow);
+}
+.dim .row{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:8px}
+.dim .name{font-size:11.5px;font-weight:500;letter-spacing:.2em;text-transform:uppercase;color:var(--charcoal)}
+.dim .val{font-family:var(--serif);font-weight:600;font-size:24px;color:var(--bronze)}
+.dim .track{height:6px;border-radius:3px;background:var(--parchment);overflow:hidden;margin-bottom:8px}
+.dim .fill{height:100%;width:0;border-radius:3px;background:linear-gradient(90deg,var(--taupe),var(--gold));transition:width 1s ease}
+.dim .band{font-size:12px;color:var(--stone)}
+
+.panel{
+  background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+  box-shadow:var(--shadow);padding:28px 30px;margin-bottom:22px;
+}
+.panel h4{
+  font-size:12px;font-weight:500;letter-spacing:.26em;text-transform:uppercase;color:var(--gold);
+  margin-bottom:14px;display:flex;align-items:center;gap:12px;
+}
+.panel h4::after{content:'';flex:1;height:1px;background:var(--line)}
+.panel p{font-size:14.5px;margin-bottom:10px}
+.panel ul{list-style:none;display:flex;flex-direction:column;gap:10px}
+.panel li{position:relative;padding-left:22px;font-size:14.5px}
+.panel li::before{content:'';position:absolute;left:2px;top:9px;width:7px;height:7px;border-radius:50%;background:var(--gold)}
+.panel.parch{background:var(--parchment)}
+
+.res-actions{display:flex;justify-content:center;gap:14px;flex-wrap:wrap;margin-top:30px}
+.submit-status{text-align:center;font-size:13px;margin-top:18px;color:var(--sage)}
+.submit-status.err{color:#b0563c}
+
+/* ---------- footer ---------- */
+.brandfoot{margin-top:70px;text-align:center;opacity:.9}
+.brandfoot .tagline{margin-top:8px}
+
+/* ---------- print ---------- */
+@media print{
+  body{background:#fff}
+  .topbar,.res-actions,.no-print{display:none !important}
+  .screen{display:none}
+  #results.active{display:block;padding-top:10px}
+  .snapshot,.dim,.panel,.card{box-shadow:none}
+  .dim-grid{grid-template-columns:1fr 1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- Static form so Netlify detects fields at deploy time -->
+<form name="wellness-intake" method="POST" data-netlify="true" netlify-honeypot="bot-field" hidden>
+  <input type="text" name="bot-field">
+  <input type="text" name="name">
+  <input type="email" name="email">
+  <input type="text" name="phone">
+  <input type="text" name="dob">
+  <input type="text" name="sex">
+  <input type="text" name="primary_focus">
+  <textarea name="goals_text"></textarea>
+  <textarea name="context_text"></textarea>
+  <input type="text" name="overall_score">
+  <input type="text" name="score_goals">
+  <input type="text" name="score_calm">
+  <input type="text" name="score_sleep">
+  <input type="text" name="score_stress">
+  <input type="text" name="score_hormones">
+  <input type="text" name="score_vitality">
+  <input type="text" name="score_lifestyle">
+  <input type="text" name="score_readiness">
+  <textarea name="answers_readable"></textarea>
+  <textarea name="answers_json"></textarea>
+  <input type="text" name="submitted_at">
+</form>
+
+<div class="topbar" id="topbar">
+  <div class="topbar-inner">
+    <div class="mark small" aria-hidden="true">
+      <div class="bar"></div><div class="point"></div>
+      <div class="wordmark">THE PEPTIDE LOUNGE</div>
+    </div>
+    <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="steplabel" id="stepLabel"></div>
+  </div>
+</div>
+
+<div class="shell">
+
+  <!-- ══════════ WELCOME ══════════ -->
+  <section class="screen active" id="welcome">
+    <div class="mark" role="img" aria-label="The Peptide Lounge — Longevity, Wellness, Precision">
+      <div class="bar"></div><div class="point"></div>
+      <div class="wordmark">THE&nbsp;PEPTIDE&nbsp;LOUNGE</div>
+      <div class="tagline">LONGEVITY&nbsp;&nbsp;·&nbsp;&nbsp;WELLNESS&nbsp;&nbsp;·&nbsp;&nbsp;PRECISION</div>
+    </div>
+
+    <h1 class="display">Your Wellness<br><em>Assessment</em></h1>
+    <p class="intro">Welcome. This brief assessment builds your personal wellness snapshot across eight dimensions — the starting point for your physician-guided plan.</p>
+
+    <div class="meta">
+      <span><i class="dot"></i>8 dimensions</span>
+      <span><i class="dot"></i>About 5 minutes</span>
+      <span><i class="dot"></i>Reviewed by your care team</span>
+    </div>
+
+    <button class="btn btn-gold" onclick="goTo(1)">Begin Assessment</button>
+    <p class="footnote">Your responses are confidential and shared only with The Peptide Lounge care team. They are interpreted alongside your history, labs, and consultation goals.</p>
+  </section>
+
+  <!-- ══════════ ABOUT YOU ══════════ -->
+  <section class="screen" id="details">
+    <div class="section-head">
+      <div class="kicker">About You</div>
+      <h2>Let’s begin with the basics</h2>
+      <p class="lead">This helps your care team personalize your snapshot and follow up with you.</p>
+      <div class="rule"></div>
+    </div>
+
+    <div class="card">
+      <div class="fields">
+        <div class="field">
+          <label for="f-name">Full name</label>
+          <input id="f-name" type="text" autocomplete="name" placeholder="Jane Smith">
+        </div>
+        <div class="field">
+          <label for="f-email">Email</label>
+          <input id="f-email" type="email" autocomplete="email" placeholder="you@example.com">
+        </div>
+        <div class="field">
+          <label for="f-phone">Phone</label>
+          <input id="f-phone" type="tel" autocomplete="tel" placeholder="(555) 555-5555">
+        </div>
+        <div class="field">
+          <label for="f-dob">Date of birth</label>
+          <input id="f-dob" type="date" autocomplete="bday">
+        </div>
+        <div class="field">
+          <label for="f-sex">Sex</label>
+          <select id="f-sex">
+            <option value="">Select…</option>
+            <option>Female</option>
+            <option>Male</option>
+            <option>Other / prefer to self-describe</option>
+            <option>Prefer not to say</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="f-focus">Primary focus</label>
+          <select id="f-focus">
+            <option value="">Select…</option>
+            <option>Weight &amp; body composition</option>
+            <option>Energy &amp; vitality</option>
+            <option>Sleep quality</option>
+            <option>Stress, mood &amp; calm</option>
+            <option>Hormone health</option>
+            <option>Recovery &amp; performance</option>
+            <option>Cognitive clarity &amp; focus</option>
+            <option>Longevity &amp; healthy aging</option>
+            <option>Skin, hair &amp; aesthetics</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="field full">
+          <label for="f-goals">In your own words, what are your top goals?</label>
+          <textarea id="f-goals" placeholder="e.g. Lose 15 lbs, sleep through the night, feel sharp at work…"></textarea>
+        </div>
+        <div class="field full">
+          <label for="f-context">Anything else your care team should know? <span class="opt">(optional)</span></label>
+          <textarea id="f-context" placeholder="Medical history, medications, past programs, concerns…"></textarea>
+          <span class="hint">Please don’t include emergencies here — this form is not monitored in real time.</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="navrow">
+      <button class="btn btn-ghost" onclick="goTo(0)">Back</button>
+      <div class="spacer"></div>
+      <button class="btn btn-gold" onclick="submitDetails()">Continue</button>
+    </div>
+  </section>
+
+  <!-- ══════════ QUESTION SECTIONS (rendered by JS) ══════════ -->
+  <section class="screen" id="questions">
+    <div class="section-head">
+      <div class="kicker" id="q-kicker"></div>
+      <h2 id="q-title"></h2>
+      <p class="lead" id="q-lead"></p>
+      <div class="rule"></div>
+    </div>
+    <div class="qlist" id="q-list"></div>
+    <div class="navrow">
+      <button class="btn btn-ghost" onclick="prevSection()">Back</button>
+      <div class="spacer"></div>
+      <div class="remaining" id="q-remaining"></div>
+      <button class="btn btn-gold" id="q-next" onclick="nextSection()">Continue</button>
+    </div>
+  </section>
+
+  <!-- ══════════ RESULTS ══════════ -->
+  <section class="screen" id="results">
+    <div class="res-head">
+      <div class="mark small" aria-hidden="true">
+        <div class="bar"></div><div class="point"></div>
+        <div class="wordmark">THE&nbsp;PEPTIDE&nbsp;LOUNGE</div>
+      </div>
+      <h1 class="display">Your Wellness Snapshot</h1>
+      <p class="res-sub" id="res-sub"></p>
+    </div>
+
+    <div class="snapshot">
+      <div class="ring" role="img" id="ringWrap" aria-label="Overall wellness score">
+        <svg width="190" height="190" viewBox="0 0 190 190">
+          <circle class="track" cx="95" cy="95" r="84" fill="none" stroke-width="10"/>
+          <circle class="fill" id="ringFill" cx="95" cy="95" r="84" fill="none" stroke-width="10"/>
+        </svg>
+        <div class="center">
+          <div class="pct" id="ringPct">0%</div>
+          <div class="cap">Overall</div>
+        </div>
+      </div>
+      <div>
+        <span class="band-chip" id="overallBand"></span>
+        <h3>Overall Wellness</h3>
+        <p id="overallText"></p>
+      </div>
+    </div>
+
+    <div class="dim-grid" id="dimGrid"></div>
+
+    <div class="panel">
+      <h4>Care Team Summary</h4>
+      <p id="summaryText"></p>
+    </div>
+
+    <div class="panel">
+      <h4>Key Observations</h4>
+      <ul id="insightList"></ul>
+    </div>
+
+    <div class="panel parch">
+      <h4>What Happens Next</h4>
+      <ul>
+        <li>Your care team reviews your snapshot alongside your goals and history.</li>
+        <li>We may recommend labs or body-composition analysis to complete the picture.</li>
+        <li>You’ll meet with a clinician to design your personalized, physician-guided roadmap.</li>
+      </ul>
+    </div>
+
+    <div class="res-actions no-print">
+      <button class="btn btn-ghost" onclick="window.print()">Print / Save Snapshot</button>
+      <button class="btn btn-gold" onclick="location.reload()">Start a New Assessment</button>
+    </div>
+    <div class="submit-status" id="submitStatus"></div>
+
+    <div class="brandfoot">
+      <div class="rule"></div>
+      <div class="tagline" style="font-size:10.5px;letter-spacing:.3em;text-indent:.3em;color:var(--gold);font-weight:500">LONGEVITY&nbsp;&nbsp;·&nbsp;&nbsp;WELLNESS&nbsp;&nbsp;·&nbsp;&nbsp;PRECISION</div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+/* ══════════════════ survey definition ══════════════════ */
+const SCALES = {
+  amount: ['Not at all','A little','Somewhat','Quite a bit','Very much'],
+  freq:   ['Never','Rarely','Sometimes','Often','Very often'],
+};
+
+const SECTIONS = [
+  {
+    id:'goals', name:'Peptide Goals', scale:'amount', reversed:false,
+    lead:'How strongly does each of these goals apply to you right now?',
+    questions:[
+      'Increase energy, drive, and daily stamina',
+      'Improve body composition or support weight loss',
+      'Recover faster from workouts, travel, or stress',
+      'Improve focus, mental clarity, or cognitive sharpness',
+      'Sleep more deeply and wake more restored',
+      'Support healthy aging and longevity goals',
+    ],
+  },
+  {
+    id:'calm', name:'Calm & Anxiety', scale:'freq', reversed:true,
+    lead:'Over the past few weeks, how often have you experienced the following?',
+    questions:[
+      'Feeling overly nervous, tense, or on edge',
+      'Difficulty controlling worry or racing thoughts',
+      'Trouble relaxing or settling your mind and body',
+      'Restlessness or feeling unable to slow down',
+      'Irritability or feeling easily triggered',
+      'Concern that stress is affecting performance or quality of life',
+    ],
+  },
+  {
+    id:'sleep', name:'Sleep', scale:'freq', reversed:true,
+    lead:'Over the past few weeks, how often have you experienced the following?',
+    questions:[
+      'Difficulty falling asleep',
+      'Waking up during the night or too early',
+      'Snoring, shallow sleep, or breathing concerns',
+      'Waking up unrefreshed or low on energy',
+      'Needing caffeine or stimulants to get going in the morning',
+      'Sleep problems affecting mood, focus, or performance',
+    ],
+  },
+  {
+    id:'stress', name:'Stress', scale:'freq', reversed:true,
+    lead:'Over the past few weeks, how often have you experienced the following?',
+    questions:[
+      'Feeling overwhelmed by responsibilities',
+      'Feeling constantly “on” and unable to reset',
+      'Emotional strain affecting health or relationships',
+      'Physical stress signals (tension, headaches, tightness)',
+      'Feeling behind, scattered, or out of control',
+      'Stress interfering with your wellness habits',
+    ],
+  },
+  {
+    id:'hormones', name:'Hormones', scale:'amount', reversed:true,
+    lead:'To what degree have you noticed the following recently?',
+    questions:[
+      'Low libido or reduced sexual interest',
+      'Reduced drive, motivation, or confidence',
+      'Loss of lean muscle, strength, or slower recovery',
+      'Increasing abdominal fat or body-composition shifts',
+      'Brain fog, poor focus, or low mental sharpness',
+      'Sleep disruption, hot flashes, or night sweats',
+      {text:'Cycle, mood, or temperature changes (perimenopause)', onlyFor:'Female'},
+      {text:'Erection, morning erection, or performance changes', onlyFor:'Male'},
+    ],
+  },
+  {
+    id:'vitality', name:'Vitality', scale:'amount', reversed:false,
+    lead:'How true is each statement for you on a typical day?',
+    questions:[
+      'I feel mentally sharp and productive through the day',
+      'I have enough physical energy for work, exercise, and family',
+      'My mood and motivation feel steady',
+      'I bounce back well after demanding days or travel',
+      'Workouts feel rewarding rather than draining',
+      'I feel younger than my chronological age',
+    ],
+  },
+  {
+    id:'lifestyle', name:'Lifestyle', scale:'amount', reversed:false,
+    lead:'How true is each statement about your current habits?',
+    questions:[
+      'My nutrition is aligned with my goals',
+      'I exercise or move my body consistently',
+      'I prioritize sleep and recovery',
+      'My alcohol and nicotine use is in line with my goals',
+      'I’m consistent with supplements, medications, and self-care',
+      'I have the time, support, or systems to follow through',
+    ],
+  },
+  {
+    id:'readiness', name:'Readiness', scale:'amount', reversed:false,
+    lead:'How ready are you to begin a physician-guided program?',
+    questions:[
+      'I’m willing to complete recommended labs and body-composition testing',
+      'I’m open to lifestyle changes alongside any therapy',
+      'I want a physician-guided rather than self-directed plan',
+      'I’m motivated to follow through for 8–12 weeks',
+      'I’m ready to invest time and attention in this process',
+      'I value a clear, personalized roadmap',
+    ],
+  },
+];
+
+/* ══════════════════ state ══════════════════ */
+const details = {name:'',email:'',phone:'',dob:'',sex:'',focus:'',goals:'',context:''};
+const answers = {};           // "sectionId:qIndex" -> 0..4
+let screenIndex = 0;          // 0 welcome, 1 details, 2..9 sections, 10 results
+let currentSection = 0;
+const TOTAL_STEPS = 1 + SECTIONS.length;   // details + 8 sections
+
+const $ = id => document.getElementById(id);
+
+/* ══════════════════ navigation ══════════════════ */
+function activeQuestions(sec){
+  return sec.questions
+    .map((q,i)=>({text: typeof q==='string' ? q : q.text, onlyFor: q.onlyFor||null, idx:i}))
+    .filter(q=>!q.onlyFor || q.onlyFor===details.sex ||
+               details.sex==='' || details.sex.startsWith('Other') || details.sex.startsWith('Prefer'));
+}
+
+function goTo(idx){
+  screenIndex = idx;
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  let step = 0;
+  if(idx===0){ $('welcome').classList.add('active'); }
+  else if(idx===1){ $('details').classList.add('active'); step = 1; }
+  else if(idx>=2 && idx<2+SECTIONS.length){
+    currentSection = idx-2;
+    renderSection(currentSection);
+    $('questions').classList.add('active');
+    step = idx;
+  }
+  else { renderResults(); $('results').classList.add('active'); step = TOTAL_STEPS; }
+
+  const bar = $('topbar');
+  bar.classList.toggle('visible', idx>0 && idx<2+SECTIONS.length);
+  if(step>0){
+    $('progressFill').style.width = Math.round(step/(TOTAL_STEPS+1)*100)+'%';
+    $('stepLabel').textContent = idx===1 ? 'About you' : `Step ${step} of ${TOTAL_STEPS}`;
+  }
+  window.scrollTo({top:0,behavior:'instant'});
+}
+
+function submitDetails(){
+  const req = [['f-name','name'],['f-email','email']];
+  let ok = true;
+  req.forEach(([id])=>$(id).classList.remove('invalid'));
+  const name = $('f-name').value.trim();
+  const email = $('f-email').value.trim();
+  if(!name){ $('f-name').classList.add('invalid'); ok=false; }
+  if(!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ $('f-email').classList.add('invalid'); ok=false; }
+  if(!ok){ window.scrollTo({top:0,behavior:'smooth'}); return; }
+  details.name = name;
+  details.email = email;
+  details.phone = $('f-phone').value.trim();
+  details.dob = $('f-dob').value;
+  details.sex = $('f-sex').value;
+  details.focus = $('f-focus').value;
+  details.goals = $('f-goals').value.trim();
+  details.context = $('f-context').value.trim();
+  goTo(2);
+}
+
+/* ══════════════════ question rendering ══════════════════ */
+function renderSection(si){
+  const sec = SECTIONS[si];
+  const qs = activeQuestions(sec);
+  $('q-kicker').textContent = `Section ${si+1} of ${SECTIONS.length}`;
+  $('q-title').textContent = sec.name;
+  $('q-lead').textContent = sec.lead;
+
+  const list = $('q-list');
+  list.innerHTML = '';
+  qs.forEach((q,n)=>{
+    const key = sec.id+':'+q.idx;
+    const card = document.createElement('div');
+    card.className = 'qcard'+(key in answers ? ' answered':'');
+    card.id = 'qc-'+key.replace(':','-');
+    const choices = SCALES[sec.scale].map((label,v)=>`
+      <label class="choice">
+        <input type="radio" name="${key}" value="${v}" ${answers[key]===v?'checked':''}
+               onchange="setAnswer('${sec.id}',${q.idx},${v})">
+        <span>${label}</span>
+      </label>`).join('');
+    card.innerHTML = `
+      <div class="qnum">Question ${n+1} of ${qs.length} <span class="tick">✓</span></div>
+      <div class="qtext">${q.text}</div>
+      <div class="choices" role="radiogroup" aria-label="${q.text}">${choices}</div>`;
+    list.appendChild(card);
+  });
+  updateRemaining();
+}
+
+function setAnswer(secId, qIdx, val){
+  const key = secId+':'+qIdx;
+  answers[key] = val;
+  const card = $('qc-'+secId+'-'+qIdx);
+  if(card) card.classList.add('answered');
+  updateRemaining();
+  // gently scroll to the next unanswered card
+  const next = document.querySelector('.qcard:not(.answered)');
+  if(next) setTimeout(()=>next.scrollIntoView({behavior:'smooth',block:'center'}), 180);
+}
+
+function unansweredCount(){
+  const sec = SECTIONS[currentSection];
+  return activeQuestions(sec).filter(q=>!((sec.id+':'+q.idx) in answers)).length;
+}
+
+function updateRemaining(){
+  const n = unansweredCount();
+  $('q-remaining').textContent = n===0 ? '' : (n===1 ? '1 question left' : n+' questions left');
+  $('q-next').disabled = n>0;
+  $('q-next').textContent = currentSection===SECTIONS.length-1 ? 'See My Snapshot' : 'Continue';
+}
+
+function nextSection(){
+  if(unansweredCount()>0) return;
+  goTo(screenIndex+1);
+}
+function prevSection(){ goTo(screenIndex-1); }
+
+/* ══════════════════ scoring ══════════════════ */
+function sectionScore(sec){
+  const qs = activeQuestions(sec);
+  const max = qs.length*4;
+  const sum = qs.reduce((t,q)=>t+(answers[sec.id+':'+q.idx]??0),0);
+  const pct = sec.reversed ? (max-sum)/max : sum/max;
+  return Math.round(pct*100);
+}
+function band(p){
+  if(p>=85) return 'Strong foundation';
+  if(p>=70) return 'Generally favorable';
+  if(p>=55) return 'Moderate opportunity';
+  if(p>=40) return 'Meaningful opportunity';
+  return 'Priority focus area';
+}
+function overallPhrase(p){
+  if(p>=85) return 'an excellent starting point';
+  if(p>=70) return 'a strong starting point';
+  if(p>=55) return 'a good starting point';
+  return 'a clear starting point';
+}
+
+/* ══════════════════ results ══════════════════ */
+function renderResults(){
+  const scores = {};
+  SECTIONS.forEach(sec=>scores[sec.id]=sectionScore(sec));
+  const overall = Math.round(SECTIONS.reduce((t,s)=>t+scores[s.id],0)/SECTIONS.length);
+
+  const first = details.name.split(/\s+/)[0] || 'there';
+  $('res-sub').textContent = `Prepared for ${details.name} · ${new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})}`;
+
+  // ring
+  const C = 2*Math.PI*84;
+  const ring = $('ringFill');
+  ring.style.strokeDasharray = C;
+  ring.style.strokeDashoffset = C;
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    ring.style.strokeDashoffset = C*(1-overall/100);
+  }));
+  animateNumber($('ringPct'), overall);
+  $('ringWrap').setAttribute('aria-label', `Overall wellness score ${overall} percent`);
+  $('overallBand').textContent = band(overall);
+  $('overallText').textContent =
+    `${first}, your overall snapshot score is ${overall}% — ${overallPhrase(overall)} for physician-guided optimization across the eight dimensions of wellness.`;
+
+  // dimension bars
+  const grid = $('dimGrid');
+  grid.innerHTML = '';
+  SECTIONS.forEach(sec=>{
+    const p = scores[sec.id];
+    const d = document.createElement('div');
+    d.className = 'dim';
+    d.innerHTML = `
+      <div class="row"><span class="name">${sec.name}</span><span class="val">${p}%</span></div>
+      <div class="track"><div class="fill"></div></div>
+      <div class="band">${band(p)}</div>`;
+    grid.appendChild(d);
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{
+      d.querySelector('.fill').style.width = p+'%';
+    }));
+  });
+
+  // care team summary
+  const focusTxt = details.focus ? details.focus.toLowerCase() : 'overall wellness';
+  $('summaryText').textContent =
+    `${details.name} completed The Peptide Lounge new-member assessment with an overall wellness snapshot score of ${overall}%, reflecting ${overallPhrase(overall)} for physician-guided optimization. The strongest themes center around ${focusTxt}. These results are interpreted together with the member’s history, labs, body-composition data, and consultation goals.`;
+
+  // insights
+  const ins = [];
+  if(scores.goals>=70) ins.push('Strong interest in a clinician-guided peptide or longevity plan.');
+  if(scores.readiness>=80) ins.push('Readiness is high — well prepared to follow through on a structured plan.');
+  if(scores.lifestyle>=85) ins.push('Excellent lifestyle foundation — habits already support an optimization program.');
+  if(scores.calm<55 || scores.stress<55) ins.push('Stress or anxious tension may be affecting resilience, recovery, or consistency.');
+  if(scores.sleep<60) ins.push('Sleep quality is a meaningful opportunity and a likely early focus area.');
+  if(scores.hormones<60) ins.push('Reported symptoms suggest hormone balance is worth evaluating with labs.');
+  if(scores.vitality<60) ins.push('Daily energy and vitality show room to improve with a structured plan.');
+  if(details.goals) ins.push(`Primary goals shared: ${details.goals}`);
+  if(ins.length===0) ins.push('A well-balanced snapshot — your care team will focus on fine-tuning and longevity.');
+  $('insightList').innerHTML = ins.map(t=>`<li>${t}</li>`).join('');
+
+  submitToNetlify(scores, overall);
+}
+
+function animateNumber(el, target){
+  const t0 = performance.now(), dur = 1100;
+  function tick(t){
+    const k = Math.min(1,(t-t0)/dur);
+    el.textContent = Math.round(target*(1-Math.pow(1-k,3)))+'%';
+    if(k<1) requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+
+/* ══════════════════ submission ══════════════════ */
+let submitted = false;
+function submitToNetlify(scores, overall){
+  if(submitted) return;
+  submitted = true;
+
+  const readable = SECTIONS.map(sec=>{
+    const qs = activeQuestions(sec);
+    const lines = qs.map(q=>{
+      const v = answers[sec.id+':'+q.idx];
+      return `  • ${q.text}: ${SCALES[sec.scale][v]} (${v})`;
+    });
+    return `${sec.name.toUpperCase()} — ${scores[sec.id]}%\n`+lines.join('\n');
+  }).join('\n\n');
+
+  const data = new URLSearchParams({
+    'form-name':'wellness-intake',
+    name:details.name, email:details.email, phone:details.phone,
+    dob:details.dob, sex:details.sex, primary_focus:details.focus,
+    goals_text:details.goals, context_text:details.context,
+    overall_score:overall+'%',
+    score_goals:scores.goals+'%', score_calm:scores.calm+'%',
+    score_sleep:scores.sleep+'%', score_stress:scores.stress+'%',
+    score_hormones:scores.hormones+'%', score_vitality:scores.vitality+'%',
+    score_lifestyle:scores.lifestyle+'%', score_readiness:scores.readiness+'%',
+    answers_readable:readable,
+    answers_json:JSON.stringify(answers),
+    submitted_at:new Date().toISOString(),
+  });
+
+  const status = $('submitStatus');
+  fetch('/', {method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body:data.toString()})
+    .then(r=>{
+      if(r.ok){ status.textContent = '✓ Your assessment has been sent to The Peptide Lounge care team.'; }
+      else{ throw new Error(); }
+    })
+    .catch(()=>{
+      status.classList.add('err');
+      status.textContent = 'We couldn’t reach the server — please print or screenshot this snapshot and share it with us.';
+    });
+}
+</script>
+</body>
+</html>

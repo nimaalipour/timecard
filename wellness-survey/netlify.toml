@@ -1,0 +1,6 @@
+# Netlify configuration for The Peptide Lounge wellness assessment.
+# Static site, no build step. Use this file by creating a Netlify site
+# with the base directory set to `wellness-survey`.
+
+[build]
+  publish = "."
