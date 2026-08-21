@@ -18,8 +18,11 @@ A branded, mobile-friendly wellness intake survey. One self-contained
 - Submits everything — contact details, every answer, and all computed
   scores — to **Netlify Forms** (form name: `wellness-intake`), so
   submissions appear in the Netlify dashboard under **Forms** and can
-  trigger email notifications.
-- Members can **print / save** their snapshot (print stylesheet included).
+  trigger email notifications. On the live site, each submission is
+  automatically emailed to the medical director
+  (nimaalipour@alipourmedical.com).
+- Members can **email themselves a copy** of their snapshot (opens their
+  mail app pre-filled) or **print / save** it (print stylesheet included).
 
 ## Deploying on Netlify
 

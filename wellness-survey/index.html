@@ -249,6 +249,15 @@ input,select,textarea{font-family:inherit;color:inherit}
 .panel li::before{content:'';position:absolute;left:2px;top:9px;width:7px;height:7px;border-radius:50%;background:var(--gold)}
 .panel.parch{background:var(--parchment)}
 
+.self-email-row{display:flex;gap:12px;flex-wrap:wrap;margin-top:4px}
+.self-email-row input{
+  flex:1;min-width:220px;
+  border:1px solid var(--line);border-radius:999px;background:var(--cream);
+  padding:12px 20px;font-size:15px;outline:none;transition:border-color .2s, box-shadow .2s;
+}
+.self-email-row input:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(181,137,62,.14)}
+.self-email-row input.invalid{border-color:#b0563c;background:#fdf6f2}
+.self-email-note{font-size:12.5px;color:var(--stone);margin-top:10px}
 .res-actions{display:flex;justify-content:center;gap:14px;flex-wrap:wrap;margin-top:30px}
 .submit-status{text-align:center;font-size:13px;margin-top:18px;color:var(--sage)}
 .submit-status.err{color:#b0563c}
@@ -464,6 +473,16 @@ input,select,textarea{font-family:inherit;color:inherit}
         <li>We may recommend labs or body-composition analysis to complete the picture.</li>
         <li>You’ll meet with a clinician to design your personalized, physician-guided roadmap.</li>
       </ul>
+    </div>
+
+    <div class="panel no-print">
+      <h4>Email Yourself a Copy</h4>
+      <p>Want your snapshot for your records? Enter your email and we’ll open a pre-filled message in your mail app — just review and press send.</p>
+      <div class="self-email-row">
+        <input type="email" id="selfEmail" placeholder="you@example.com" autocomplete="email" aria-label="Your email address">
+        <button class="btn btn-gold" onclick="emailMyResults()">Send My Results</button>
+      </div>
+      <div class="self-email-note" id="selfEmailNote"></div>
     </div>
 
     <div class="res-actions no-print">
@@ -706,10 +725,14 @@ function overallPhrase(p){
 }
 
 /* ══════════════════ results ══════════════════ */
+let lastResults = null;
+
 function renderResults(){
   const scores = {};
   SECTIONS.forEach(sec=>scores[sec.id]=sectionScore(sec));
   const overall = Math.round(SECTIONS.reduce((t,s)=>t+scores[s.id],0)/SECTIONS.length);
+  lastResults = {scores, overall};
+  $('selfEmail').value = details.email;
 
   const first = details.name.split(/\s+/)[0] || 'there';
   $('res-sub').textContent = `Prepared for ${details.name} · ${new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})}`;
@@ -772,6 +795,47 @@ function animateNumber(el, target){
     if(k<1) requestAnimationFrame(tick);
   }
   requestAnimationFrame(tick);
+}
+
+/* ══════════════════ email yourself a copy ══════════════════ */
+function buildSelfEmailBody(){
+  const {scores, overall} = lastResults;
+  const date = new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
+  const lines = SECTIONS.map(sec=>`${sec.name}: ${scores[sec.id]}% — ${band(scores[sec.id])}`);
+  return [
+    'THE PEPTIDE LOUNGE — WELLNESS SNAPSHOT',
+    `Prepared for ${details.name} · ${date}`,
+    '',
+    `Overall Wellness: ${overall}% — ${band(overall)}`,
+    '',
+    ...lines,
+    '',
+    'CARE TEAM SUMMARY',
+    $('summaryText').textContent,
+    '',
+    'Your full responses are on file with The Peptide Lounge care team, who will review them ahead of your consultation.',
+    '',
+    'Longevity · Wellness · Precision',
+  ].join('\n');
+}
+
+function emailMyResults(){
+  const input = $('selfEmail');
+  const note = $('selfEmailNote');
+  const email = input.value.trim();
+  input.classList.remove('invalid');
+  if(!lastResults) return;
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
+    input.classList.add('invalid');
+    note.textContent = 'Please enter a valid email address.';
+    return;
+  }
+  const subject = `Your Peptide Lounge Wellness Snapshot — ${lastResults.overall}%`;
+  const href = `mailto:${encodeURIComponent(email)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(buildSelfEmailBody())}`;
+  const a = document.createElement('a');
+  a.href = href;
+  a.click();
+  note.textContent = 'Your mail app should open with the snapshot pre-filled — press send there. Nothing opened? Use Print / Save below instead.';
 }
 
 /* ══════════════════ submission ══════════════════ */
