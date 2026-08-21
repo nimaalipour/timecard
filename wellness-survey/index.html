@@ -19,6 +19,12 @@
   --taupe:#B5A48A;
   --stone:#8C8478;
   --sage:#6B7B5E;
+  /* status colors (validated against the cream surface) */
+  --good:#4C7D44; --good-ink:#3E6237; --good-bg:#E9EFE3;
+  --mid:#B5893E;  --mid-ink:#7A5A1C;  --mid-bg:#F3E8D3;
+  --opp:#AE4A38;  --opp-ink:#93392B;  --opp-bg:#F5E0D8;
+  /* sequential gold ramp, least → most favorable */
+  --r0:#BE9A50; --r1:#A78134; --r2:#8F6A25; --r3:#755316; --r4:#573C08;
   --card:#FFFDF7;
   --line:rgba(181,137,62,.28);
   --shadow:0 1px 2px rgba(46,46,46,.04), 0 8px 28px rgba(46,46,46,.07);
@@ -214,25 +220,57 @@ input,select,textarea{font-family:inherit;color:inherit}
 .ring .cap{font-size:10.5px;font-weight:500;letter-spacing:.24em;text-transform:uppercase;color:var(--gold);text-indent:.24em}
 .snapshot h3{font-family:var(--serif);font-weight:500;font-size:26px;margin-bottom:8px}
 .band-chip{
-  display:inline-block;margin-bottom:12px;
-  border:1px solid var(--gold);color:var(--bronze);border-radius:999px;
+  display:inline-flex;align-items:center;gap:8px;margin-bottom:12px;
+  border:1px solid var(--gold);color:var(--bronze);background:var(--mid-bg);border-radius:999px;
   font-size:11px;font-weight:500;letter-spacing:.2em;text-transform:uppercase;
-  padding:5px 14px;text-indent:.2em;
+  padding:5px 14px 5px 12px;
 }
+.band-chip::before{content:'';width:7px;height:7px;border-radius:50%;background:currentColor;flex:none}
+.band-chip.st-good{border-color:var(--good);color:var(--good-ink);background:var(--good-bg)}
+.band-chip.st-mid{border-color:var(--mid);color:var(--mid-ink);background:var(--mid-bg)}
+.band-chip.st-opp{border-color:var(--opp);color:var(--opp-ink);background:var(--opp-bg)}
+.band-chip.sm{margin:0;font-size:10px;padding:3px 10px 3px 9px;letter-spacing:.14em;gap:6px}
 .snapshot p{font-size:14.5px;color:var(--charcoal)}
 
-.dim-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:22px}
-@media(max-width:640px){.dim-grid{grid-template-columns:1fr}}
-.dim{
+/* charts row */
+.charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:22px}
+@media(max-width:680px){.charts-grid{grid-template-columns:1fr}}
+.chart-card{
   background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
-  padding:18px 20px 16px;box-shadow:var(--shadow);
+  box-shadow:var(--shadow);padding:24px 26px;
 }
-.dim .row{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:8px}
+.chart-card h4{
+  font-size:12px;font-weight:500;letter-spacing:.26em;text-transform:uppercase;color:var(--gold);
+  margin-bottom:6px;display:flex;align-items:center;gap:12px;
+}
+.chart-card h4::after{content:'';flex:1;height:1px;background:var(--line)}
+.chart-note{font-size:12.5px;color:var(--stone);margin-bottom:16px}
+.radar-wrap{display:flex;justify-content:center;align-items:center;min-height:250px}
+.radar-wrap svg{max-width:100%;height:auto}
+
+.mix-bar{display:flex;gap:2px;height:30px;margin-top:6px}
+.mix-seg{height:100%;min-width:3px;position:relative;transition:width 1s ease}
+.mix-seg:first-child{border-radius:4px 0 0 4px}
+.mix-seg:last-child{border-radius:0 4px 4px 0}
+.mix-seg .seglabel{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  font-size:11.5px;font-weight:500;color:var(--cream);
+}
+.mix-legend{display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:16px}
+.mix-legend .item{display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--stone)}
+.mix-legend .sw{width:10px;height:10px;border-radius:3px;flex:none}
+
+/* dimension score rows */
+.dim{padding:15px 0;border-bottom:1px solid var(--line)}
+.dim:last-child{border-bottom:none;padding-bottom:2px}
+.dim .row{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:9px;flex-wrap:wrap}
 .dim .name{font-size:11.5px;font-weight:500;letter-spacing:.2em;text-transform:uppercase;color:var(--charcoal)}
-.dim .val{font-family:var(--serif);font-weight:600;font-size:24px;color:var(--bronze)}
-.dim .track{height:6px;border-radius:3px;background:var(--parchment);overflow:hidden;margin-bottom:8px}
-.dim .fill{height:100%;width:0;border-radius:3px;background:linear-gradient(90deg,var(--taupe),var(--gold));transition:width 1s ease}
-.dim .band{font-size:12px;color:var(--stone)}
+.dim .right{display:flex;align-items:center;gap:12px}
+.dim .val{font-family:var(--serif);font-weight:600;font-size:23px;color:var(--charcoal)}
+.dim .track{height:6px;border-radius:3px;background:var(--parchment);overflow:hidden;margin-bottom:9px}
+.dim .fill{height:100%;width:0;border-radius:3px;transition:width 1s ease}
+.qdots{display:flex;gap:4px;flex-wrap:wrap}
+.qdot{width:10px;height:10px;border-radius:50%}
 
 .panel{
   background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
@@ -272,8 +310,8 @@ input,select,textarea{font-family:inherit;color:inherit}
   .topbar,.res-actions,.no-print{display:none !important}
   .screen{display:none}
   #results.active{display:block;padding-top:10px}
-  .snapshot,.dim,.panel,.card{box-shadow:none}
-  .dim-grid{grid-template-columns:1fr 1fr}
+  .snapshot,.panel,.card,.chart-card{box-shadow:none}
+  .charts-grid{grid-template-columns:1fr 1fr}
 }
 </style>
 </head>
@@ -292,7 +330,6 @@ input,select,textarea{font-family:inherit;color:inherit}
   <textarea name="context_text"></textarea>
   <input type="text" name="overall_score">
   <input type="text" name="score_goals">
-  <input type="text" name="score_calm">
   <input type="text" name="score_stress">
   <input type="text" name="score_hormones">
   <input type="text" name="score_vitality">
@@ -324,11 +361,11 @@ input,select,textarea{font-family:inherit;color:inherit}
     </div>
 
     <h1 class="display">Your Wellness<br><em>Assessment</em></h1>
-    <p class="intro">Welcome. This brief assessment builds your personal wellness snapshot across six dimensions — the starting point for your physician-guided plan.</p>
+    <p class="intro">Welcome. This brief assessment builds your personal wellness snapshot across five dimensions — the starting point for your physician-guided plan.</p>
 
     <div class="meta">
-      <span><i class="dot"></i>6 dimensions</span>
-      <span><i class="dot"></i>About 4 minutes</span>
+      <span><i class="dot"></i>5 dimensions</span>
+      <span><i class="dot"></i>About 3 minutes</span>
       <span><i class="dot"></i>Reviewed by your care team</span>
     </div>
 
@@ -454,7 +491,25 @@ input,select,textarea{font-family:inherit;color:inherit}
       </div>
     </div>
 
-    <div class="dim-grid" id="dimGrid"></div>
+    <div class="charts-grid">
+      <div class="chart-card">
+        <h4>Wellness Wheel</h4>
+        <p class="chart-note">Your five dimensions at a glance — the fuller the shape, the stronger the foundation.</p>
+        <div class="radar-wrap" id="radarWrap"></div>
+      </div>
+      <div class="chart-card">
+        <h4>Response Mix</h4>
+        <p class="chart-note">How favorable your answers were across every question, from least (0) to most (4).</p>
+        <div class="mix-bar" id="mixBar"></div>
+        <div class="mix-legend" id="mixLegend"></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h4>Dimension Scores</h4>
+      <p class="chart-note">Sorted strongest to lowest. Each dot is one answer — darker gold means more favorable.</p>
+      <div id="dimGrid"></div>
+    </div>
 
     <div class="panel">
       <h4>Care Team Summary</h4>
@@ -517,18 +572,6 @@ const SECTIONS = [
       'Improve focus, mental clarity, or cognitive sharpness',
       'Sleep more deeply and wake more restored',
       'Support healthy aging and longevity goals',
-    ],
-  },
-  {
-    id:'calm', name:'Calm & Anxiety', scale:'freq', reversed:true,
-    lead:'Over the past few weeks, how often have you experienced the following?',
-    questions:[
-      'Feeling overly nervous, tense, or on edge',
-      'Difficulty controlling worry or racing thoughts',
-      'Trouble relaxing or settling your mind and body',
-      'Restlessness or feeling unable to slow down',
-      'Irritability or feeling easily triggered',
-      'Concern that stress is affecting performance or quality of life',
     ],
   },
   {
@@ -717,6 +760,10 @@ function band(p){
   if(p>=40) return 'Meaningful opportunity';
   return 'Priority focus area';
 }
+/* status color per band: good >=70, mid 55-69, opportunity <55 */
+function bandStatus(p){ return p>=70 ? 'good' : p>=55 ? 'mid' : 'opp'; }
+const STATUS_COLOR = {good:'#4C7D44', mid:'#B5893E', opp:'#AE4A38'};
+const RAMP = ['#BE9A50','#A78134','#8F6A25','#755316','#573C08'];  // favorability 0..4
 function overallPhrase(p){
   if(p>=85) return 'an excellent starting point';
   if(p>=70) return 'a strong starting point';
@@ -737,9 +784,10 @@ function renderResults(){
   const first = details.name.split(/\s+/)[0] || 'there';
   $('res-sub').textContent = `Prepared for ${details.name} · ${new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})}`;
 
-  // ring
+  // ring, tinted by overall band
   const C = 2*Math.PI*84;
   const ring = $('ringFill');
+  ring.style.stroke = STATUS_COLOR[bandStatus(overall)];
   ring.style.strokeDasharray = C;
   ring.style.strokeDashoffset = C;
   requestAnimationFrame(()=>requestAnimationFrame(()=>{
@@ -747,26 +795,42 @@ function renderResults(){
   }));
   animateNumber($('ringPct'), overall);
   $('ringWrap').setAttribute('aria-label', `Overall wellness score ${overall} percent`);
-  $('overallBand').textContent = band(overall);
+  const ob = $('overallBand');
+  ob.textContent = band(overall);
+  ob.className = 'band-chip st-'+bandStatus(overall);
   $('overallText').textContent =
-    `${first}, your overall snapshot score is ${overall}% — ${overallPhrase(overall)} for physician-guided optimization across the six dimensions of wellness.`;
+    `${first}, your overall snapshot score is ${overall}% — ${overallPhrase(overall)} for physician-guided optimization across the five dimensions of wellness.`;
 
-  // dimension bars
+  // dimension score rows, strongest first, with per-answer dot strips
   const grid = $('dimGrid');
   grid.innerHTML = '';
-  SECTIONS.forEach(sec=>{
+  const ordered = [...SECTIONS].sort((a,b)=>scores[b.id]-scores[a.id]);
+  ordered.forEach(sec=>{
     const p = scores[sec.id];
+    const st = bandStatus(p);
+    const dots = activeQuestions(sec).map(q=>{
+      const v = answers[sec.id+':'+q.idx];
+      const fav = sec.reversed ? 4-v : v;
+      const label = SCALES[sec.scale][v];
+      return `<span class="qdot" style="background:${RAMP[fav]}" title="${q.text} — ${label}"></span>`;
+    }).join('');
     const d = document.createElement('div');
     d.className = 'dim';
     d.innerHTML = `
-      <div class="row"><span class="name">${sec.name}</span><span class="val">${p}%</span></div>
-      <div class="track"><div class="fill"></div></div>
-      <div class="band">${band(p)}</div>`;
+      <div class="row">
+        <span class="name">${sec.name}</span>
+        <span class="right"><span class="band-chip sm st-${st}">${band(p)}</span><span class="val">${p}%</span></span>
+      </div>
+      <div class="track"><div class="fill" style="background:${STATUS_COLOR[st]}"></div></div>
+      <div class="qdots" aria-label="${sec.name} answers, least to most favorable">${dots}</div>`;
     grid.appendChild(d);
     requestAnimationFrame(()=>requestAnimationFrame(()=>{
       d.querySelector('.fill').style.width = p+'%';
     }));
   });
+
+  renderRadar(scores);
+  renderMix();
 
   // care team summary
   const focusTxt = details.focus ? details.focus.toLowerCase() : 'overall wellness';
@@ -777,7 +841,7 @@ function renderResults(){
   const ins = [];
   if(scores.goals>=70) ins.push('Strong interest in a clinician-guided peptide or longevity plan.');
   if(scores.lifestyle>=85) ins.push('Excellent lifestyle foundation — habits already support an optimization program.');
-  if(scores.calm<55 || scores.stress<55) ins.push('Stress or anxious tension may be affecting resilience, recovery, or consistency.');
+  if(scores.stress<55) ins.push('Stress may be affecting resilience, recovery, or consistency.');
   if(scores.hormones<60) ins.push('Reported symptoms suggest hormone balance is worth evaluating with labs.');
   if(scores.vitality<60) ins.push('Daily energy and vitality show room to improve with a structured plan.');
   if(details.goals) ins.push(`Primary goals shared: ${details.goals}`);
@@ -785,6 +849,65 @@ function renderResults(){
   $('insightList').innerHTML = ins.map(t=>`<li>${t}</li>`).join('');
 
   submitToNetlify(scores, overall);
+}
+
+/* ══════════════════ charts ══════════════════ */
+function renderRadar(scores){
+  const W=430, H=300, cx=W/2, cy=H/2+6, R=98;
+  const n = SECTIONS.length;
+  const angle = i => -Math.PI/2 + i*2*Math.PI/n;
+  const pt = (i,r) => [cx + r*Math.cos(angle(i)), cy + r*Math.sin(angle(i))];
+  const poly = r => Array.from({length:n},(_,i)=>pt(i,r).map(v=>v.toFixed(1)).join(',')).join(' ');
+
+  const rings = [25,50,75,100].map(v=>
+    `<polygon points="${poly(R*v/100)}" fill="none" stroke="#EAE0C9" stroke-width="1"/>`).join('');
+  const spokes = Array.from({length:n},(_,i)=>{
+    const [x,y]=pt(i,R);
+    return `<line x1="${cx}" y1="${cy}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" stroke="#EAE0C9" stroke-width="1"/>`;
+  }).join('');
+
+  const dataPts = SECTIONS.map((sec,i)=>pt(i, R*scores[sec.id]/100));
+  const dataPoly = dataPts.map(p=>p.map(v=>v.toFixed(1)).join(',')).join(' ');
+  const dots = dataPts.map((p,i)=>
+    `<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="4.5" fill="#B5893E" stroke="#FFFDF7" stroke-width="2"><title>${SECTIONS[i].name}: ${scores[SECTIONS[i].id]}%</title></circle>`).join('');
+
+  const labels = SECTIONS.map((sec,i)=>{
+    const [x,y] = pt(i, R+24);
+    const a = angle(i);
+    const anchor = Math.abs(Math.cos(a))<.3 ? 'middle' : (Math.cos(a)>0 ? 'start' : 'end');
+    const dy = Math.sin(a)>.6 ? 10 : (Math.sin(a)<-.6 ? 0 : 4);
+    return `<text x="${x.toFixed(1)}" y="${(y+dy).toFixed(1)}" text-anchor="${anchor}"
+        font-size="9.5" font-weight="500" letter-spacing="1.5" fill="#2E2E2E">${sec.name.toUpperCase()}</text>
+      <text x="${x.toFixed(1)}" y="${(y+dy+14).toFixed(1)}" text-anchor="${anchor}"
+        font-size="11" font-weight="600" fill="#8F6A25">${scores[sec.id]}%</text>`;
+  }).join('');
+
+  $('radarWrap').innerHTML =
+    `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img"
+        aria-label="Wellness wheel: ${SECTIONS.map(s=>s.name+' '+scores[s.id]+'%').join(', ')}"
+        style="font-family:var(--sans)">
+      ${rings}${spokes}
+      <polygon points="${dataPoly}" fill="rgba(181,137,62,.16)" stroke="#B5893E" stroke-width="2" stroke-linejoin="round"/>
+      ${dots}${labels}
+    </svg>`;
+}
+
+function renderMix(){
+  const counts = [0,0,0,0,0];
+  let total = 0;
+  SECTIONS.forEach(sec=>activeQuestions(sec).forEach(q=>{
+    const v = answers[sec.id+':'+q.idx];
+    if(v==null) return;
+    counts[sec.reversed ? 4-v : v]++; total++;
+  }));
+  const NAMES = ['Least favorable','Less favorable','Neutral','Favorable','Most favorable'];
+  $('mixBar').innerHTML = counts.map((c,i)=>c===0?'':(
+    `<div class="mix-seg" style="width:${(c/total*100).toFixed(1)}%;background:${RAMP[i]}"
+         title="${NAMES[i]}: ${c} of ${total} answers">
+       ${c/total>=0.09?`<span class="seglabel">${c}</span>`:''}
+     </div>`)).join('');
+  $('mixLegend').innerHTML = counts.map((c,i)=>
+    `<span class="item"><span class="sw" style="background:${RAMP[i]}"></span>${NAMES[i]} · ${c}</span>`).join('');
 }
 
 function animateNumber(el, target){
@@ -859,7 +982,7 @@ function submitToNetlify(scores, overall){
     dob:details.dob, sex:details.sex, primary_focus:details.focus,
     goals_text:details.goals, context_text:details.context,
     overall_score:overall+'%',
-    score_goals:scores.goals+'%', score_calm:scores.calm+'%',
+    score_goals:scores.goals+'%',
     score_stress:scores.stress+'%',
     score_hormones:scores.hormones+'%', score_vitality:scores.vitality+'%',
     score_lifestyle:scores.lifestyle+'%',
