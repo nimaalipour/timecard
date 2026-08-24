@@ -199,3 +199,20 @@ to re-record the narrator (unchanged lines are skipped), then redeploy.
 | `triangle-race/make-voicepack.js` | Re-records the narrator (needs `pip install edge-tts`) |
 | `triangle-race/build-standalone.js` | Bundles everything into one shareable HTML file |
 | `triangle-race/voice/` + `voicepack.js` | The recorded lines and the text→clip map |
+
+---
+
+# Jordan's Birthday Wish 🎂
+
+A one-file animated birthday card for **Jordan**, at
+**`paper-plane-park/jordan-birthday/index.html`** (deploys at `/jordan-birthday/`).
+
+Open it and the show runs on its own: a lone candle in the dark, a glowing
+**3… 2… 1…** countdown, the flame puffs out into smoke — and a two-tier cake
+rises with Jordan's photo piped onto the frosting. The camera zooms into his
+face, confetti falls, and the card lands on **"Happy Birthday, Jordan!"** with a
+"Blow it out again" replay button.
+
+Everything (photo included) is inlined, so the single HTML file can be opened
+from disk, texted, or emailed — no server, no build step. It honors
+`prefers-reduced-motion` by skipping straight to the finished card.
